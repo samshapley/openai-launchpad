@@ -1,5 +1,7 @@
 # OpenAI Launchpad
 
+![image](https://github.com/samshapley/openai-launchpad/assets/93387313/183fc535-4d6d-4dc7-a933-122309670c90)
+
 ### Features
 
 **ai.py** is a single file that contains all the code you need to interact with the OpenAI API, in a pre-built, cookbook-esque format. It's designed to be easy to use, and easy to understand.
