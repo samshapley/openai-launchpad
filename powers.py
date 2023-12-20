@@ -1,11 +1,15 @@
 import json
+from ai import Embeddings
 
 def extract_tool_calls(messages):
     """
     Extracts tool calls from the last message in the messages list.
 
-    :param messages: List of message objects from the chat completion.
-    :return: List of tool calls extracted from the last message.
+    Args:
+        messages (List[dict]): List of message objects from the chat completion.
+
+    Returns:
+        List[dict]: List of tool calls extracted from the last message, or None if no tool calls are present.
     """
     last_message = messages[-1]
 
@@ -17,12 +21,16 @@ def extract_tool_calls(messages):
     return tool_calls
 
 def use_tools(messages, available_functions):
+
     """
     Executes the functions specified in the tool_calls using the available functions provided and integrates the responses into the messages.
 
-    :param messages: List of message objects from the chat completion.
-    :param available_functions: Dictionary of available functions to be used.
-    :return: The updated list of messages with the tool responses integrated.
+    Args:
+        messages (List[dict]): List of message objects from the chat completion.
+        available_functions (dict): Dictionary of available functions to be used, with function names as keys and callable functions as values.
+
+    Returns:
+        List[dict]: The updated list of messages with the tool responses integrated.
     """
     tool_calls = extract_tool_calls(messages)
 
@@ -50,3 +58,38 @@ def use_tools(messages, available_functions):
             pass
 
     return messages
+
+def retrieval(embeddings, query, knowledge_base, top_n=1):
+    """
+    Retrieves the most relevant facts based on a query from a given knowledge base.
+
+    Args:
+        embeddings (Embeddings): An instance of the Embeddings class.
+        query (str): The query string to retrieve information for.
+        knowledge_base (List[str]): A list of facts as strings.
+        top_n (int): The number of top relevant facts to return.
+
+    Returns:
+        List[str]: A list of the most relevant facts.
+    """
+
+    # Create embeddings for the query
+    query_embedding = embeddings.create_embeddings([query])[0]['embedding']
+    
+    # Create embeddings for all facts in the knowledge base
+    facts_embeddings = embeddings.create_embeddings(knowledge_base)
+
+    # Calculate similarity scores between the query and each fact
+    similarity_scores = []
+    for fact, fact_data in zip(knowledge_base, facts_embeddings):
+        fact_embedding = fact_data['embedding']
+        similarity = embeddings.cosine_similarity(query_embedding, fact_embedding)
+        similarity_scores.append((fact, similarity))
+    
+    # Sort the facts by similarity score in descending order
+    sorted_facts = sorted(similarity_scores, key=lambda x: x[1], reverse=True)
+
+    # Return the top_n most relevant facts
+    top_facts = [fact for fact, _ in sorted_facts[:top_n]]
+
+    return top_facts if top_facts else None
