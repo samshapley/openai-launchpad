@@ -47,8 +47,8 @@ def use_tools(messages, available_functions):
                 # Integrate the tool response into the messages
                 function_response_json = json.dumps(function_response)
                 messages.append({
-                    "tool_call_id": tool_call["id"],
                     "role": "tool",
+                    "tool_call_id": tool_call["id"],
                     "name": function_name,
                     "content": function_response_json,
                 })
@@ -59,7 +59,7 @@ def use_tools(messages, available_functions):
 
     return messages
 
-def retrieval(embeddings, query, knowledge_base, top_n=1):
+def retrieval(embeddings, query, knowledge_base, top_n=1, similarity_threshold=0.0):
     """
     Retrieves the most relevant facts based on a query from a given knowledge base.
 
@@ -68,9 +68,10 @@ def retrieval(embeddings, query, knowledge_base, top_n=1):
         query (str): The query string to retrieve information for.
         knowledge_base (List[str]): A list of facts as strings.
         top_n (int): The number of top relevant facts to return.
+        similarity_threshold (float): The minimum similarity score for a fact to be considered relevant.
 
     Returns:
-        List[str]: A list of the most relevant facts.
+        List[str]: A list of the most relevant facts above the similarity threshold.
     """
 
     # Create embeddings for the query
@@ -84,12 +85,13 @@ def retrieval(embeddings, query, knowledge_base, top_n=1):
     for fact, fact_data in zip(knowledge_base, facts_embeddings):
         fact_embedding = fact_data['embedding']
         similarity = embeddings.cosine_similarity(query_embedding, fact_embedding)
-        similarity_scores.append((fact, similarity))
+        if similarity >= similarity_threshold:
+            similarity_scores.append((fact, similarity))
     
     # Sort the facts by similarity score in descending order
     sorted_facts = sorted(similarity_scores, key=lambda x: x[1], reverse=True)
 
-    # Return the top_n most relevant facts
+    # Return the top_n most relevant facts above the threshold
     top_facts = [fact for fact, _ in sorted_facts[:top_n]]
 
     return top_facts if top_facts else None
