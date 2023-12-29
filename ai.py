@@ -19,11 +19,12 @@ from helpers import log
 import helpers as h
 
 ## get openai api key from environment variable
-openai.api_key = os.getenv("OPENAI_API_KEY")
+openai.api_key = 'API_KEY'
 
 logging = False
 
 class Chat:
+
     def __init__(self, system="", model="gpt-3.5-turbo"):
         """
         Initializes the Chat class with a system message, model, and OpenAI client.
@@ -36,6 +37,7 @@ class Chat:
         self.openai = openai
         self.messages = [{"role": "system", "content": system}]
         self.model = model
+        self.encoding = tiktoken.encoding_for_model(self.model)
         log(logging, f"Initalized Chat class with model {model}", "green")
     
     @staticmethod
@@ -76,12 +78,9 @@ class Chat:
         else:
             phrases = self.augment_phrases(suppressed_phrases, augment)
 
-        encoding = tiktoken.encoding_for_model(self.model)
-        log(logging, f"Obtained encoding for model", "purple")
-
         logit_bias_dict = {}
         for phrase in phrases:
-            tokens = list(set([t for t in encoding.encode(phrase)]))
+            tokens = list(set([t for t in self.encoding.encode(phrase)]))
             phrase_bias = suppressed_phrases[phrase] if isinstance(suppressed_phrases, dict) else bias
             for t in tokens:
                 logit_bias_dict[t] = phrase_bias
@@ -141,7 +140,6 @@ class Chat:
         if return_tool_calls and tools is None:
             raise ValueError("return_tool_calls cannot be True if tools is None")
 
-
         # Set up model if provided, otherwise use self.model.
         model = model or self.model
         # Create the messages, use self.messages if messages is not provided.
@@ -183,7 +181,7 @@ class Chat:
 
 
         # Make the API call
-        log(logging, f"Chat Completion Call", "blue")
+        log(logging, "Making Chat Completion API call...", "purple")
         completion = self.openai.chat.completions.create(**api_call_args)
         
         if stream:
@@ -265,7 +263,7 @@ class Chat:
             output_tuple += (tool_calls,)
 
         return output_tuple
-
+    
 class Vision:
     def __init__(self, model="gpt-4-vision-preview", system=""):
         """
@@ -279,6 +277,7 @@ class Vision:
         self.model = model
         self.messages = [{"role": "system", "content": system}]
         self.system = system
+        log(logging, f"Initalized Vision class with model {model}.", "green")
 
     def encode_image(self, image_path):
         """
@@ -384,6 +383,7 @@ class Vision:
         }
 
         # Make the API call
+        log(logging, "Making Vision Completion API call...", "purple")
         completion = self.openai.chat.completions.create(**api_call_args)
 
         if stream:
@@ -397,6 +397,7 @@ class Vision:
             chat_content = "".join(chat)
         else:    
             chat_content = completion.choices[0].message.content
+        print("\n")
 
         # If speak is True, generate audio from the completion text
         if speak:
@@ -423,6 +424,7 @@ class Embeddings:
         self.openai = openai
         self.embedding_model = embedding_model
         self.encoding_format = encoding_format
+        log(logging, f"Initalized Embeddings class with model {embedding_model}.", "green")
 
     def create_embeddings(self, texts):
         """
@@ -438,7 +440,7 @@ class Embeddings:
         if not isinstance(texts, list):
             raise ValueError("Input should be a list of strings.")
 
-        # Create embeddings
+        # Create embeddings.
         embeddings = self.openai.embeddings.create(
             model=self.embedding_model,
             input=texts,
@@ -492,6 +494,7 @@ class Images:
         self.openai = openai
         self.model = model
         self.valid_sizes = ["1024x1024", "1792x1024", "1024x1792"]
+        log(logging, f"Initalized Images class with model {model}.", "green")
 
     def check_size(self, size):
         """
@@ -547,6 +550,7 @@ class Images:
         """
         self.check_size(size)
 
+        log(logging, "Making Image Generation API call...", "purple")
         response = self.openai.images.generate(
             model=self.model,
             prompt=prompt,
@@ -569,6 +573,7 @@ class Images:
 class Audio:
     def __init__(self):
         self.openai = openai
+        log(logging, f"Initalized Audio class.", "green")
 
     def speak(self, text, model="tts-1", voice="onyx", response_format="opus", speed=1.0):
         """
@@ -581,6 +586,8 @@ class Audio:
             response_format (str): The format to audio in. Supported formats are mp3, opus, aac, and flac. Defaults to 'opus'.
             speed (float): The speed of the generated audio. Select a value from 0.25 to 4.0. Defaults to 1.0.
         """
+
+        log(logging, "Making Speech API call...", "purple")
         spoken_response = self.openai.audio.speech.create(
             model=model,
             voice=voice,
@@ -614,6 +621,8 @@ class Audio:
         Returns:
             The transcribed text.
         """
+
+        log(logging, "Making Speech Transcription API call...", "purple")
         with open(file_path, "rb") as audio_file:
             transcription = self.openai.audio.transcriptions.create(
                 model=model,
@@ -639,6 +648,8 @@ class Audio:
         Returns:
             The translated text.
         """
+
+        log(logging, "Making Speech Translation API call...", "purple")
         with open(file_path, "rb") as audio_file:
             translation = self.openai.audio.translations.create(
                 model=model,
@@ -665,7 +676,7 @@ class Audio:
         """
         # Prepare the recording stream
         with sd.InputStream(samplerate=sample_rate, channels=1) as stream:
-            print("\033[92m" + "\n Recording started. Speak into the microphone.\n" + "\033[0m")
+            log(logging, "Recording started. Speak into the microphone.", "blue")
             buffer = []
             silence_counter = 0
             start_time = datetime.now()
@@ -673,7 +684,7 @@ class Audio:
             while True:
                 data, overflowed = stream.read(sample_rate * silence_duration)
                 if overflowed:
-                    print("Overflow! Recording may not be accurate.")
+                    raise RuntimeError("Overflowed")
                 buffer.append(data)
                 current_time = datetime.now()
                 elapsed_time = (current_time - start_time).total_seconds()
@@ -686,8 +697,8 @@ class Audio:
                 # Check if the minimum duration has passed and if the silence duration has been reached
                 if elapsed_time > min_duration and silence_counter >= silence_duration:
                     break
-                
-            print("\033[91m" + "\n Recording ended.\n" + "\033[0m")
+            
+            log(logging, "Recording ended.", "red")
             recording = np.concatenate(buffer, axis=0)
 
         # Save the recording to a file
@@ -742,6 +753,7 @@ class Audio:
 class Files:
     def __init__(self):
         self.openai = openai
+        log(logging, f"Initalized Files class.", "green")
 
     def upload_file(self, file_path, purpose):
         """
@@ -754,9 +766,13 @@ class Files:
         Returns:
             The uploaded file.
         """
-
-        with open(file_path, "rb") as file:
-            return self.openai.files.create(file=file, purpose=purpose)
+        try:
+            log(logging, f"Uploading file {file_path}...", "purple")
+            with open(file_path, "rb") as file:
+                return self.openai.files.create(file=file, purpose=purpose)
+        except Exception as e:
+            log(logging, f"Failed to upload file {file_path}: {e}", "red")
+            return None
         
     def list_files(self, purpose=None):
         """
@@ -768,8 +784,12 @@ class Files:
         Returns:
             A list of file objects.
         """
-
-        return self.openai.files.list(purpose=purpose)
+        try:
+            log(logging, f"Listing files...", "purple")
+            return self.openai.files.list(purpose=purpose)
+        except Exception as e:
+            log(logging, f"Failed to list files: {e}", "red")
+            return None
 
     def delete_file(self, file_id):
         """
@@ -788,8 +808,12 @@ class Files:
         }
        
         """
-
-        return self.openai.files.delete(file_id)
+        try:
+            log(logging, f"Deleting file {file_id}.", "purple")
+            return self.openai.files.delete(file_id)
+        except Exception as e:
+            log(logging, f"Failed to delete file {file_id}: {e}", "red")
+            return None
 
     def retrieve_file(self, file_id):
         """
@@ -801,8 +825,12 @@ class Files:
         Returns:
             The specified file object.
         """
-
-        return self.openai.files.retrieve(file_id)
+        try:
+            log(logging, f"Retrieving file {file_id}.", "purple")
+            return self.openai.files.retrieve(file_id)
+        except Exception as e:
+            log(logging, f"Failed to retrieve file {file_id}: {e}", "red")
+            return None
 
     def retrieve_file_content(self, file_id):
         """
@@ -814,13 +842,18 @@ class Files:
         Returns:
             The content of the specified file.
         """
-
-        return self.openai.files.retrieve(file_id, "content")  
+        try:
+            log(logging, f"Retrieving content of file {file_id}.", "purple")
+            return self.openai.files.retrieve(file_id, "content")
+        except Exception as e:
+            log(logging, f"Failed to retrieve content of file {file_id}: {e}", "red")
+            return None  
     
 class FineTuner:
     def __init__(self):
         self.openai = openai
         self.files = Files()
+        log(logging, f"Initalized FineTuner class.", "green")
 
     @staticmethod
     def validate_finetuning_format(file_path):
@@ -931,6 +964,7 @@ class FineTuner:
         if batch_size is not None:
             hyperparameters["batch_size"] = batch_size
 
+        log(logging, "Making Fine-Tuning API call...", "purple")
         fine_tuning_job = self.openai.fine_tuning.jobs.create(
             training_file=file.id, 
             model=model_name, 
