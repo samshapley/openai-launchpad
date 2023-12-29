@@ -18,7 +18,7 @@
 
 ### Setup
 
-Get building 4 steps.
+Get building in 4 steps. In a new virtual environment, 
 
 ```python
 git clone git@github.com:samshapley/openai-launchpad.git
