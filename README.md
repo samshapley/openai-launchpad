@@ -1,6 +1,7 @@
 # OpenAI Launchpad
 
-![image](https://github.com/samshapley/openai-launchpad/assets/93387313/183fc535-4d6d-4dc7-a933-122309670c90)
+![A retro pixel art image of a robot on a launchpad trampoline, similar to the first design, but with a unique twist_ the robot has a visible neural net-2](https://github.com/samshapley/openai-launchpad/assets/93387313/df904c4a-d2b9-4d25-99c8-5282ad01f760)
+
 
 ### Features
 
