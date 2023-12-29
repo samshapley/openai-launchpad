@@ -21,9 +21,9 @@
 Get building 4 steps.
 
 ```python
-git clone 
+git clone git@github.com:samshapley/openai-launchpad.git
 
-cd openai-overlay
+cd openai-launchpad
 
 pip install -r requirements.txt
 
