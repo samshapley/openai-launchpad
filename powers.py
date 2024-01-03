@@ -1,5 +1,4 @@
 import json
-from ai import Embeddings
 
 def extract_tool_calls(messages):
     """

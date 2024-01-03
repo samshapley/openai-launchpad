@@ -19,9 +19,9 @@ from helpers import log
 import helpers as h
 
 ## get openai api key from environment variable
-openai.api_key = 'API_KEY'
+openai.api_key = 'YOUR API KEY HERE'
 
-logging = False
+logging = True
 
 class Chat:
 
