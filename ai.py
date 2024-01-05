@@ -19,7 +19,7 @@ from helpers import log
 import helpers as h
 
 ## get openai api key from environment variable
-openai.api_key = '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'
+openai.api_key = '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'
 
 logging = True
 
