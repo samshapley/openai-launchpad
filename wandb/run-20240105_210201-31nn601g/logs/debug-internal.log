@@ -1,0 +1,186 @@
+2024-01-05 21:02:01,346 INFO    StreamThr :30957 [internal.py:wandb_internal():86] W&B internal server running at pid: 30957, started at: 2024-01-05 21:02:01.346072
+2024-01-05 21:02:01,347 DEBUG   HandlerThread:30957 [handler.py:handle_request():146] handle_request: status
+2024-01-05 21:02:01,347 INFO    WriterThread:30957 [datastore.py:open_for_write():85] open: /Users/samuel.shapley/projects/openai-launchpad/openai-launchpad/wandb/run-20240105_210201-31nn601g/run-31nn601g.wandb
+2024-01-05 21:02:01,348 DEBUG   SenderThread:30957 [sender.py:send():382] send: header
+2024-01-05 21:02:01,377 DEBUG   SenderThread:30957 [sender.py:send():382] send: run
+2024-01-05 21:02:01,788 INFO    SenderThread:30957 [dir_watcher.py:__init__():211] watching files in: /Users/samuel.shapley/projects/openai-launchpad/openai-launchpad/wandb/run-20240105_210201-31nn601g/files
+2024-01-05 21:02:01,788 INFO    SenderThread:30957 [sender.py:_start_run_threads():1136] run started: 31nn601g with start time 1704488521.345667
+2024-01-05 21:02:01,797 DEBUG   HandlerThread:30957 [handler.py:handle_request():146] handle_request: check_version
+2024-01-05 21:02:01,798 DEBUG   SenderThread:30957 [sender.py:send_request():409] send_request: check_version
+2024-01-05 21:02:01,880 DEBUG   HandlerThread:30957 [handler.py:handle_request():146] handle_request: run_start
+2024-01-05 21:02:01,881 DEBUG   HandlerThread:30957 [system_info.py:__init__():32] System info init
+2024-01-05 21:02:01,884 DEBUG   HandlerThread:30957 [system_info.py:__init__():47] System info init done
+2024-01-05 21:02:01,884 INFO    HandlerThread:30957 [system_monitor.py:start():194] Starting system monitor
+2024-01-05 21:02:01,884 INFO    SystemMonitor:30957 [system_monitor.py:_start():158] Starting system asset monitoring threads
+2024-01-05 21:02:01,884 INFO    HandlerThread:30957 [system_monitor.py:probe():214] Collecting system info
+2024-01-05 21:02:01,885 INFO    SystemMonitor:30957 [interfaces.py:start():190] Started cpu monitoring
+2024-01-05 21:02:01,885 DEBUG   HandlerThread:30957 [system_info.py:probe():196] Probing system
+2024-01-05 21:02:01,885 INFO    SystemMonitor:30957 [interfaces.py:start():190] Started disk monitoring
+2024-01-05 21:02:01,887 INFO    SystemMonitor:30957 [interfaces.py:start():190] Started gpuapple monitoring
+2024-01-05 21:02:01,890 INFO    SystemMonitor:30957 [interfaces.py:start():190] Started memory monitoring
+2024-01-05 21:02:01,891 INFO    SystemMonitor:30957 [interfaces.py:start():190] Started network monitoring
+2024-01-05 21:02:01,892 DEBUG   HandlerThread:30957 [system_info.py:_probe_git():181] Probing git
+2024-01-05 21:02:01,932 DEBUG   HandlerThread:30957 [system_info.py:_probe_git():189] Probing git done
+2024-01-05 21:02:01,932 DEBUG   HandlerThread:30957 [system_info.py:probe():244] Probing system done
+2024-01-05 21:02:01,933 DEBUG   HandlerThread:30957 [system_monitor.py:probe():223] {'os': 'macOS-14.2.1-arm64-arm-64bit', 'python': '3.11.5', 'heartbeatAt': '2024-01-05T21:02:01.887096', 'startedAt': '2024-01-05T21:02:01.341995', 'docker': None, 'cuda': None, 'args': (), 'state': 'running', 'program': '<python with no main file>', 'codePathLocal': None, 'git': {'remote': 'git@github.com:samshapley/openai-launchpad.git', 'commit': '8af771ad6321189c34be3a85052235177185540e'}, 'email': 'samuelshapley@gmail.com', 'root': '/Users/samuel.shapley/projects/openai-launchpad/openai-launchpad', 'host': 'Y6VDWF7R9G', 'username': 'samuel.shapley', 'executable': '/Users/samuel.shapley/.virtualenv/openai-launchpad/bin/python', 'cpu_count': 10, 'cpu_count_logical': 10, 'disk': {'/': {'total': 460.4317207336426, 'used': 9.42437744140625}}, 'gpuapple': {'type': 'arm', 'vendor': 'Apple'}, 'memory': {'total': 16.0}}
+2024-01-05 21:02:01,933 INFO    HandlerThread:30957 [system_monitor.py:probe():224] Finished collecting system info
+2024-01-05 21:02:01,933 INFO    HandlerThread:30957 [system_monitor.py:probe():227] Publishing system info
+2024-01-05 21:02:01,933 DEBUG   HandlerThread:30957 [system_info.py:_save_pip():52] Saving list of pip packages installed into the current environment
+2024-01-05 21:02:01,933 DEBUG   HandlerThread:30957 [system_info.py:_save_pip():68] Saving pip packages done
+2024-01-05 21:02:01,933 INFO    HandlerThread:30957 [system_monitor.py:probe():229] Finished publishing system info
+2024-01-05 21:02:01,934 DEBUG   SenderThread:30957 [sender.py:send():382] send: files
+2024-01-05 21:02:01,934 INFO    SenderThread:30957 [sender.py:_save_file():1392] saving file wandb-metadata.json with policy now
+2024-01-05 21:02:01,940 DEBUG   HandlerThread:30957 [handler.py:handle_request():146] handle_request: stop_status
+2024-01-05 21:02:01,940 DEBUG   SenderThread:30957 [sender.py:send_request():409] send_request: stop_status
+2024-01-05 21:02:01,941 DEBUG   HandlerThread:30957 [handler.py:handle_request():146] handle_request: internal_messages
+2024-01-05 21:02:02,205 DEBUG   SenderThread:30957 [sender.py:send():382] send: telemetry
+2024-01-05 21:02:02,444 INFO    wandb-upload_0:30957 [upload_job.py:push():131] Uploaded file /var/folders/91/_9_6qpp15n51rvr1xjt35d6w0000gp/T/tmpaojdlquwwandb/2rmbnj17-wandb-metadata.json
+2024-01-05 21:02:02,790 INFO    Thread-25 :30957 [dir_watcher.py:_on_file_created():271] file/dir created: /Users/samuel.shapley/projects/openai-launchpad/openai-launchpad/wandb/run-20240105_210201-31nn601g/files/requirements.txt
+2024-01-05 21:02:02,790 INFO    Thread-25 :30957 [dir_watcher.py:_on_file_created():271] file/dir created: /Users/samuel.shapley/projects/openai-launchpad/openai-launchpad/wandb/run-20240105_210201-31nn601g/files/output.log
+2024-01-05 21:02:02,790 INFO    Thread-25 :30957 [dir_watcher.py:_on_file_created():271] file/dir created: /Users/samuel.shapley/projects/openai-launchpad/openai-launchpad/wandb/run-20240105_210201-31nn601g/files/wandb-metadata.json
+2024-01-05 21:02:04,803 INFO    Thread-25 :30957 [dir_watcher.py:_on_file_modified():288] file/dir modified: /Users/samuel.shapley/projects/openai-launchpad/openai-launchpad/wandb/run-20240105_210201-31nn601g/files/output.log
+2024-01-05 21:02:06,604 DEBUG   HandlerThread:30957 [handler.py:handle_request():146] handle_request: status_report
+2024-01-05 21:02:06,814 INFO    Thread-25 :30957 [dir_watcher.py:_on_file_modified():288] file/dir modified: /Users/samuel.shapley/projects/openai-launchpad/openai-launchpad/wandb/run-20240105_210201-31nn601g/files/output.log
+2024-01-05 21:02:10,831 INFO    Thread-25 :30957 [dir_watcher.py:_on_file_modified():288] file/dir modified: /Users/samuel.shapley/projects/openai-launchpad/openai-launchpad/wandb/run-20240105_210201-31nn601g/files/output.log
+2024-01-05 21:02:12,356 DEBUG   HandlerThread:30957 [handler.py:handle_request():146] handle_request: status_report
+2024-01-05 21:02:14,849 INFO    Thread-25 :30957 [dir_watcher.py:_on_file_modified():288] file/dir modified: /Users/samuel.shapley/projects/openai-launchpad/openai-launchpad/wandb/run-20240105_210201-31nn601g/files/output.log
+2024-01-05 21:02:16,856 INFO    Thread-25 :30957 [dir_watcher.py:_on_file_modified():288] file/dir modified: /Users/samuel.shapley/projects/openai-launchpad/openai-launchpad/wandb/run-20240105_210201-31nn601g/files/output.log
+2024-01-05 21:02:16,917 DEBUG   HandlerThread:30957 [handler.py:handle_request():146] handle_request: partial_history
+2024-01-05 21:02:16,919 DEBUG   SenderThread:30957 [sender.py:send():382] send: history
+2024-01-05 21:02:16,919 DEBUG   SenderThread:30957 [sender.py:send_request():409] send_request: summary_record
+2024-01-05 21:02:16,920 INFO    SenderThread:30957 [sender.py:_save_file():1392] saving file wandb-summary.json with policy end
+2024-01-05 21:02:16,920 DEBUG   SenderThread:30957 [sender.py:send():382] send: telemetry
+2024-01-05 21:02:16,920 DEBUG   SenderThread:30957 [sender.py:send():382] send: exit
+2024-01-05 21:02:16,920 INFO    SenderThread:30957 [sender.py:send_exit():589] handling exit code: 0
+2024-01-05 21:02:16,921 INFO    SenderThread:30957 [sender.py:send_exit():591] handling runtime: 15
+2024-01-05 21:02:16,921 INFO    SenderThread:30957 [sender.py:_save_file():1392] saving file wandb-summary.json with policy end
+2024-01-05 21:02:16,921 INFO    SenderThread:30957 [sender.py:send_exit():597] send defer
+2024-01-05 21:02:16,921 DEBUG   HandlerThread:30957 [handler.py:handle_request():146] handle_request: defer
+2024-01-05 21:02:16,921 INFO    HandlerThread:30957 [handler.py:handle_request_defer():172] handle defer: 0
+2024-01-05 21:02:16,922 DEBUG   SenderThread:30957 [sender.py:send_request():409] send_request: defer
+2024-01-05 21:02:16,922 INFO    SenderThread:30957 [sender.py:send_request_defer():613] handle sender defer: 0
+2024-01-05 21:02:16,922 INFO    SenderThread:30957 [sender.py:transition_state():617] send defer: 1
+2024-01-05 21:02:16,922 DEBUG   HandlerThread:30957 [handler.py:handle_request():146] handle_request: defer
+2024-01-05 21:02:16,922 INFO    HandlerThread:30957 [handler.py:handle_request_defer():172] handle defer: 1
+2024-01-05 21:02:16,922 DEBUG   SenderThread:30957 [sender.py:send_request():409] send_request: defer
+2024-01-05 21:02:16,922 INFO    SenderThread:30957 [sender.py:send_request_defer():613] handle sender defer: 1
+2024-01-05 21:02:16,922 INFO    SenderThread:30957 [sender.py:transition_state():617] send defer: 2
+2024-01-05 21:02:16,922 DEBUG   HandlerThread:30957 [handler.py:handle_request():146] handle_request: defer
+2024-01-05 21:02:16,922 INFO    HandlerThread:30957 [handler.py:handle_request_defer():172] handle defer: 2
+2024-01-05 21:02:16,922 INFO    HandlerThread:30957 [system_monitor.py:finish():203] Stopping system monitor
+2024-01-05 21:02:16,922 DEBUG   SystemMonitor:30957 [system_monitor.py:_start():172] Starting system metrics aggregation loop
+2024-01-05 21:02:16,922 DEBUG   SystemMonitor:30957 [system_monitor.py:_start():179] Finished system metrics aggregation loop
+2024-01-05 21:02:16,922 DEBUG   SystemMonitor:30957 [system_monitor.py:_start():183] Publishing last batch of metrics
+2024-01-05 21:02:16,923 INFO    HandlerThread:30957 [interfaces.py:finish():202] Joined cpu monitor
+2024-01-05 21:02:16,923 INFO    HandlerThread:30957 [interfaces.py:finish():202] Joined disk monitor
+2024-01-05 21:02:16,923 INFO    HandlerThread:30957 [interfaces.py:finish():202] Joined gpuapple monitor
+2024-01-05 21:02:16,924 INFO    HandlerThread:30957 [interfaces.py:finish():202] Joined memory monitor
+2024-01-05 21:02:16,924 INFO    HandlerThread:30957 [interfaces.py:finish():202] Joined network monitor
+2024-01-05 21:02:16,924 DEBUG   SenderThread:30957 [sender.py:send_request():409] send_request: defer
+2024-01-05 21:02:16,924 INFO    SenderThread:30957 [sender.py:send_request_defer():613] handle sender defer: 2
+2024-01-05 21:02:16,924 INFO    SenderThread:30957 [sender.py:transition_state():617] send defer: 3
+2024-01-05 21:02:16,924 DEBUG   SenderThread:30957 [sender.py:send():382] send: telemetry
+2024-01-05 21:02:16,924 DEBUG   HandlerThread:30957 [handler.py:handle_request():146] handle_request: defer
+2024-01-05 21:02:16,924 INFO    HandlerThread:30957 [handler.py:handle_request_defer():172] handle defer: 3
+2024-01-05 21:02:16,924 DEBUG   SenderThread:30957 [sender.py:send_request():409] send_request: defer
+2024-01-05 21:02:16,925 INFO    SenderThread:30957 [sender.py:send_request_defer():613] handle sender defer: 3
+2024-01-05 21:02:16,925 INFO    SenderThread:30957 [sender.py:transition_state():617] send defer: 4
+2024-01-05 21:02:16,925 DEBUG   HandlerThread:30957 [handler.py:handle_request():146] handle_request: defer
+2024-01-05 21:02:16,925 INFO    HandlerThread:30957 [handler.py:handle_request_defer():172] handle defer: 4
+2024-01-05 21:02:16,925 DEBUG   SenderThread:30957 [sender.py:send_request():409] send_request: defer
+2024-01-05 21:02:16,925 INFO    SenderThread:30957 [sender.py:send_request_defer():613] handle sender defer: 4
+2024-01-05 21:02:16,925 INFO    SenderThread:30957 [sender.py:transition_state():617] send defer: 5
+2024-01-05 21:02:16,925 DEBUG   HandlerThread:30957 [handler.py:handle_request():146] handle_request: defer
+2024-01-05 21:02:16,925 INFO    HandlerThread:30957 [handler.py:handle_request_defer():172] handle defer: 5
+2024-01-05 21:02:16,925 DEBUG   SenderThread:30957 [sender.py:send():382] send: summary
+2024-01-05 21:02:16,926 INFO    SenderThread:30957 [sender.py:_save_file():1392] saving file wandb-summary.json with policy end
+2024-01-05 21:02:16,926 DEBUG   SenderThread:30957 [sender.py:send_request():409] send_request: defer
+2024-01-05 21:02:16,926 INFO    SenderThread:30957 [sender.py:send_request_defer():613] handle sender defer: 5
+2024-01-05 21:02:16,926 INFO    SenderThread:30957 [sender.py:transition_state():617] send defer: 6
+2024-01-05 21:02:16,926 DEBUG   HandlerThread:30957 [handler.py:handle_request():146] handle_request: defer
+2024-01-05 21:02:16,926 INFO    HandlerThread:30957 [handler.py:handle_request_defer():172] handle defer: 6
+2024-01-05 21:02:16,926 DEBUG   SenderThread:30957 [sender.py:send_request():409] send_request: defer
+2024-01-05 21:02:16,927 INFO    SenderThread:30957 [sender.py:send_request_defer():613] handle sender defer: 6
+2024-01-05 21:02:16,929 DEBUG   HandlerThread:30957 [handler.py:handle_request():146] handle_request: status_report
+2024-01-05 21:02:17,080 INFO    SenderThread:30957 [sender.py:transition_state():617] send defer: 7
+2024-01-05 21:02:17,081 DEBUG   HandlerThread:30957 [handler.py:handle_request():146] handle_request: defer
+2024-01-05 21:02:17,081 INFO    HandlerThread:30957 [handler.py:handle_request_defer():172] handle defer: 7
+2024-01-05 21:02:17,081 DEBUG   SenderThread:30957 [sender.py:send_request():409] send_request: defer
+2024-01-05 21:02:17,081 INFO    SenderThread:30957 [sender.py:send_request_defer():613] handle sender defer: 7
+2024-01-05 21:02:17,859 INFO    Thread-25 :30957 [dir_watcher.py:_on_file_modified():288] file/dir modified: /Users/samuel.shapley/projects/openai-launchpad/openai-launchpad/wandb/run-20240105_210201-31nn601g/files/config.yaml
+2024-01-05 21:02:17,860 INFO    Thread-25 :30957 [dir_watcher.py:_on_file_created():271] file/dir created: /Users/samuel.shapley/projects/openai-launchpad/openai-launchpad/wandb/run-20240105_210201-31nn601g/files/wandb-summary.json
+2024-01-05 21:02:17,924 DEBUG   HandlerThread:30957 [handler.py:handle_request():146] handle_request: poll_exit
+2024-01-05 21:02:18,240 INFO    SenderThread:30957 [sender.py:transition_state():617] send defer: 8
+2024-01-05 21:02:18,240 DEBUG   SenderThread:30957 [sender.py:send_request():409] send_request: poll_exit
+2024-01-05 21:02:18,240 DEBUG   HandlerThread:30957 [handler.py:handle_request():146] handle_request: defer
+2024-01-05 21:02:18,241 INFO    HandlerThread:30957 [handler.py:handle_request_defer():172] handle defer: 8
+2024-01-05 21:02:18,241 DEBUG   SenderThread:30957 [sender.py:send_request():409] send_request: defer
+2024-01-05 21:02:18,241 INFO    SenderThread:30957 [sender.py:send_request_defer():613] handle sender defer: 8
+2024-01-05 21:02:18,241 INFO    SenderThread:30957 [job_builder.py:build():298] Attempting to build job artifact
+2024-01-05 21:02:18,242 INFO    SenderThread:30957 [job_builder.py:_get_source_type():428] is repo sourced job
+2024-01-05 21:02:18,242 INFO    SenderThread:30957 [job_builder.py:_get_program_relpath():446] run is notebook based run
+2024-01-05 21:02:18,242 INFO    SenderThread:30957 [sender.py:transition_state():617] send defer: 9
+2024-01-05 21:02:18,242 DEBUG   HandlerThread:30957 [handler.py:handle_request():146] handle_request: defer
+2024-01-05 21:02:18,243 INFO    HandlerThread:30957 [handler.py:handle_request_defer():172] handle defer: 9
+2024-01-05 21:02:18,243 DEBUG   SenderThread:30957 [sender.py:send_request():409] send_request: defer
+2024-01-05 21:02:18,243 INFO    SenderThread:30957 [sender.py:send_request_defer():613] handle sender defer: 9
+2024-01-05 21:02:18,243 INFO    SenderThread:30957 [dir_watcher.py:finish():358] shutting down directory watcher
+2024-01-05 21:02:18,865 INFO    Thread-25 :30957 [dir_watcher.py:_on_file_modified():288] file/dir modified: /Users/samuel.shapley/projects/openai-launchpad/openai-launchpad/wandb/run-20240105_210201-31nn601g/files/output.log
+2024-01-05 21:02:18,866 INFO    SenderThread:30957 [dir_watcher.py:finish():388] scan: /Users/samuel.shapley/projects/openai-launchpad/openai-launchpad/wandb/run-20240105_210201-31nn601g/files
+2024-01-05 21:02:18,867 INFO    SenderThread:30957 [dir_watcher.py:finish():402] scan save: /Users/samuel.shapley/projects/openai-launchpad/openai-launchpad/wandb/run-20240105_210201-31nn601g/files/requirements.txt requirements.txt
+2024-01-05 21:02:18,867 INFO    SenderThread:30957 [dir_watcher.py:finish():402] scan save: /Users/samuel.shapley/projects/openai-launchpad/openai-launchpad/wandb/run-20240105_210201-31nn601g/files/output.log output.log
+2024-01-05 21:02:18,869 INFO    SenderThread:30957 [dir_watcher.py:finish():402] scan save: /Users/samuel.shapley/projects/openai-launchpad/openai-launchpad/wandb/run-20240105_210201-31nn601g/files/config.yaml config.yaml
+2024-01-05 21:02:18,871 INFO    SenderThread:30957 [dir_watcher.py:finish():402] scan save: /Users/samuel.shapley/projects/openai-launchpad/openai-launchpad/wandb/run-20240105_210201-31nn601g/files/wandb-summary.json wandb-summary.json
+2024-01-05 21:02:18,871 INFO    SenderThread:30957 [dir_watcher.py:finish():402] scan save: /Users/samuel.shapley/projects/openai-launchpad/openai-launchpad/wandb/run-20240105_210201-31nn601g/files/wandb-metadata.json wandb-metadata.json
+2024-01-05 21:02:18,871 INFO    SenderThread:30957 [sender.py:transition_state():617] send defer: 10
+2024-01-05 21:02:18,872 DEBUG   HandlerThread:30957 [handler.py:handle_request():146] handle_request: defer
+2024-01-05 21:02:18,872 INFO    HandlerThread:30957 [handler.py:handle_request_defer():172] handle defer: 10
+2024-01-05 21:02:18,872 DEBUG   SenderThread:30957 [sender.py:send_request():409] send_request: defer
+2024-01-05 21:02:18,872 INFO    SenderThread:30957 [sender.py:send_request_defer():613] handle sender defer: 10
+2024-01-05 21:02:18,872 INFO    SenderThread:30957 [file_pusher.py:finish():175] shutting down file pusher
+2024-01-05 21:02:18,929 DEBUG   HandlerThread:30957 [handler.py:handle_request():146] handle_request: poll_exit
+2024-01-05 21:02:18,930 DEBUG   SenderThread:30957 [sender.py:send_request():409] send_request: poll_exit
+2024-01-05 21:02:19,333 INFO    wandb-upload_0:30957 [upload_job.py:push():131] Uploaded file /Users/samuel.shapley/projects/openai-launchpad/openai-launchpad/wandb/run-20240105_210201-31nn601g/files/requirements.txt
+2024-01-05 21:02:19,445 INFO    wandb-upload_1:30957 [upload_job.py:push():131] Uploaded file /Users/samuel.shapley/projects/openai-launchpad/openai-launchpad/wandb/run-20240105_210201-31nn601g/files/output.log
+2024-01-05 21:02:19,521 INFO    wandb-upload_2:30957 [upload_job.py:push():131] Uploaded file /Users/samuel.shapley/projects/openai-launchpad/openai-launchpad/wandb/run-20240105_210201-31nn601g/files/config.yaml
+2024-01-05 21:02:19,521 INFO    wandb-upload_3:30957 [upload_job.py:push():131] Uploaded file /Users/samuel.shapley/projects/openai-launchpad/openai-launchpad/wandb/run-20240105_210201-31nn601g/files/wandb-summary.json
+2024-01-05 21:02:19,727 INFO    Thread-24 (_thread_body):30957 [sender.py:transition_state():617] send defer: 11
+2024-01-05 21:02:19,727 DEBUG   HandlerThread:30957 [handler.py:handle_request():146] handle_request: defer
+2024-01-05 21:02:19,727 INFO    HandlerThread:30957 [handler.py:handle_request_defer():172] handle defer: 11
+2024-01-05 21:02:19,727 DEBUG   SenderThread:30957 [sender.py:send_request():409] send_request: defer
+2024-01-05 21:02:19,727 INFO    SenderThread:30957 [sender.py:send_request_defer():613] handle sender defer: 11
+2024-01-05 21:02:19,727 INFO    SenderThread:30957 [file_pusher.py:join():181] waiting for file pusher
+2024-01-05 21:02:19,727 INFO    SenderThread:30957 [sender.py:transition_state():617] send defer: 12
+2024-01-05 21:02:19,727 DEBUG   HandlerThread:30957 [handler.py:handle_request():146] handle_request: defer
+2024-01-05 21:02:19,727 INFO    HandlerThread:30957 [handler.py:handle_request_defer():172] handle defer: 12
+2024-01-05 21:02:19,728 DEBUG   SenderThread:30957 [sender.py:send_request():409] send_request: defer
+2024-01-05 21:02:19,728 INFO    SenderThread:30957 [sender.py:send_request_defer():613] handle sender defer: 12
+2024-01-05 21:02:19,728 INFO    SenderThread:30957 [file_stream.py:finish():595] file stream finish called
+2024-01-05 21:02:19,872 INFO    SenderThread:30957 [file_stream.py:finish():599] file stream finish is done
+2024-01-05 21:02:19,872 INFO    SenderThread:30957 [sender.py:transition_state():617] send defer: 13
+2024-01-05 21:02:19,872 DEBUG   HandlerThread:30957 [handler.py:handle_request():146] handle_request: defer
+2024-01-05 21:02:19,872 INFO    HandlerThread:30957 [handler.py:handle_request_defer():172] handle defer: 13
+2024-01-05 21:02:19,872 DEBUG   SenderThread:30957 [sender.py:send_request():409] send_request: defer
+2024-01-05 21:02:19,873 INFO    SenderThread:30957 [sender.py:send_request_defer():613] handle sender defer: 13
+2024-01-05 21:02:19,873 INFO    SenderThread:30957 [sender.py:transition_state():617] send defer: 14
+2024-01-05 21:02:19,873 DEBUG   SenderThread:30957 [sender.py:send():382] send: final
+2024-01-05 21:02:19,873 DEBUG   HandlerThread:30957 [handler.py:handle_request():146] handle_request: defer
+2024-01-05 21:02:19,873 INFO    HandlerThread:30957 [handler.py:handle_request_defer():172] handle defer: 14
+2024-01-05 21:02:19,873 DEBUG   SenderThread:30957 [sender.py:send():382] send: footer
+2024-01-05 21:02:19,873 DEBUG   SenderThread:30957 [sender.py:send_request():409] send_request: defer
+2024-01-05 21:02:19,873 INFO    SenderThread:30957 [sender.py:send_request_defer():613] handle sender defer: 14
+2024-01-05 21:02:19,874 DEBUG   HandlerThread:30957 [handler.py:handle_request():146] handle_request: poll_exit
+2024-01-05 21:02:19,874 DEBUG   SenderThread:30957 [sender.py:send_request():409] send_request: poll_exit
+2024-01-05 21:02:19,875 DEBUG   HandlerThread:30957 [handler.py:handle_request():146] handle_request: internal_messages
+2024-01-05 21:02:19,875 DEBUG   HandlerThread:30957 [handler.py:handle_request():146] handle_request: server_info
+2024-01-05 21:02:19,875 DEBUG   SenderThread:30957 [sender.py:send_request():409] send_request: server_info
+2024-01-05 21:02:19,875 DEBUG   HandlerThread:30957 [handler.py:handle_request():146] handle_request: get_summary
+2024-01-05 21:02:19,876 DEBUG   HandlerThread:30957 [handler.py:handle_request():146] handle_request: sampled_history
+2024-01-05 21:02:19,876 DEBUG   HandlerThread:30957 [handler.py:handle_request():146] handle_request: job_info
+2024-01-05 21:02:20,011 DEBUG   SenderThread:30957 [sender.py:send_request():409] send_request: job_info
+2024-01-05 21:02:20,012 DEBUG   HandlerThread:30957 [handler.py:handle_request():146] handle_request: shutdown
+2024-01-05 21:02:20,012 INFO    HandlerThread:30957 [handler.py:finish():866] shutting down handler
+2024-01-05 21:02:20,880 INFO    WriterThread:30957 [datastore.py:close():294] close: /Users/samuel.shapley/projects/openai-launchpad/openai-launchpad/wandb/run-20240105_210201-31nn601g/run-31nn601g.wandb
+2024-01-05 21:02:21,018 INFO    SenderThread:30957 [sender.py:finish():1548] shutting down sender
+2024-01-05 21:02:21,018 INFO    SenderThread:30957 [file_pusher.py:finish():175] shutting down file pusher
+2024-01-05 21:02:21,018 INFO    SenderThread:30957 [file_pusher.py:join():181] waiting for file pusher

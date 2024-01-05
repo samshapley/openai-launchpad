@@ -1,0 +1,36 @@
+{
+    "os": "macOS-14.2.1-arm64-arm-64bit",
+    "python": "3.11.5",
+    "heartbeatAt": "2024-01-05T21:04:01.226135",
+    "startedAt": "2024-01-05T21:04:00.654190",
+    "docker": null,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "<python with no main file>",
+    "codePathLocal": null,
+    "git": {
+        "remote": "git@github.com:samshapley/openai-launchpad.git",
+        "commit": "8af771ad6321189c34be3a85052235177185540e"
+    },
+    "email": "samuelshapley@gmail.com",
+    "root": "/Users/samuel.shapley/projects/openai-launchpad/openai-launchpad",
+    "host": "Y6VDWF7R9G",
+    "username": "samuel.shapley",
+    "executable": "/Users/samuel.shapley/.virtualenv/openai-launchpad/bin/python",
+    "cpu_count": 10,
+    "cpu_count_logical": 10,
+    "disk": {
+        "/": {
+            "total": 460.4317207336426,
+            "used": 9.42437744140625
+        }
+    },
+    "gpuapple": {
+        "type": "arm",
+        "vendor": "Apple"
+    },
+    "memory": {
+        "total": 16.0
+    }
+}
