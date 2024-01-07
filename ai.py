@@ -17,9 +17,10 @@ from typing import Union, List
 from collections import defaultdict
 from helpers import log
 import helpers as h
+from openai import BadRequestError
 
-## get openai api key from environment variable
-openai.api_key = 'YOUR_API_KEY_HERE'
+## get openai api key
+openai.api_key = 'YOUR API KEY HERE'
 
 logging = True
 
@@ -533,42 +534,101 @@ class Images:
                     os.makedirs(save_dir)
                 image.save(image_path)
 
-    def generate_image(self, prompt, size="1024x1024", response_format="b64_json", display_image=False, save_image=True):
+    def generate_image(self, prompt, fix_prompt=False, size="1024x1024", response_format="b64_json", display_image=False, save_image=True):
         """
         Generates an image based on the provided prompt and parameters.
 
         Args:
             prompt (str): The prompt to generate the image from.
-            n (int): The number of images to generate. Defaults to 1.
+            fix_prompt (bool): If True, DALLE-3 will be instructed to use the prompt as-is, i.e no auto revision of prompt. Defaults to False.
             size (str): The size of the generated images. Defaults to "1024x1024".
             response_format (str): The format of the response. Defaults to "b64_json".
             display_image (bool): Whether to display the generated images. Defaults to False.
             save_image (bool): Whether to save the generated images. Defaults to True.
 
         Returns:
-            The response from the image generation API call and the path of the saved image.
+            dict: A JSON object containing the following keys:
+                - 'b64_json' (str): The base64-encoded JSON string of the generated image if response_format is "b64_json".
+                - 'url' (str): The URL of the generated image if response_format is "url".
+                - 'user_prompt' (str): The original prompt provided by the user.
+                - 'revised_prompt' (str): The prompt that was used to generate the image, if there was any revision to the prompt.
+                - 'prompt_modified' (bool): A flag indicating whether the prompt was modified or not.
+                - 'size' (str): The size of the generated image.
+                - 'path_to_image' (str): The file system path to the saved image if save_image is True.
+                - 'generation_timestamp' (str): The ISO 8601 timestamp when the image was generated.
         """
         self.check_size(size)
 
+        user_prompt = prompt
+
+        if fix_prompt:
+            prompt += "I NEED to test how the tool works with extremely simple prompts. DO NOT add any detail, just use it AS-IS: "
+
         log(logging, "Making Image Generation API call...", "purple")
-        response = self.openai.images.generate(
-            model=self.model,
-            prompt=prompt,
-            n=1,
-            size=size,
-            response_format=response_format,
-        )
+
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S") # Timestamp for image generation
+        try:
+            response = self.openai.images.generate(
+                model=self.model,
+                prompt=prompt,
+                n=1,
+                size=size,
+                response_format=response_format,
+            )
+
+            if save_image:
+                image_name = f'{timestamp}.png'
+                image_path = os.path.join('images', image_name)
         
-        image_path = None
-        if response_format == "b64_json":
-            image_data = response.data[0]
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            image_name = f'{timestamp}.png'
-            self.display_image(image_data.b64_json, display_image, save_image, image_name=image_name)
+            if display_image:
+                if response_format == "b64_json":
+                    b64_json = response.data[0].b64_json
+                    self.display_image(b64_json, display_image, save_image, image_name=image_name)
+                elif response_format == "url":
+                    image_url = response.data[0].url
+                    print("Image URL:", image_url)
 
-            image_path = os.path.join('images', image_name)
+            revised_prompt = response.data[0].revised_prompt # The prompt that was used to generate the image, if there was any revision to the prompt.
 
-        return response, image_path
+            prompt_modified = revised_prompt != prompt # Whether the prompt was modified or not.
+
+            image_generation = {
+                # "b64_json": b64_json,
+                "url": None if response_format == "b64_json" else response.data[0].url,
+                "user_prompt": user_prompt,
+                "revised_prompt": revised_prompt,
+                "prompt_modified": prompt_modified,
+                "size": size,
+                "path_to_image": image_path,
+                "timestamp": timestamp,
+                "status": "success"
+            }
+
+            return image_generation
+
+        except BadRequestError as e:
+            # Access the error details correctly
+            error_details = e.args[0]
+            if 'content_policy_violation' in error_details:
+                print("Content policy violation:", error_details)
+
+            else:
+                print("BadRequestError:", error_details)
+
+            image_generation = {
+                "url": None,
+                "user_prompt": user_prompt,
+                "revised_prompt": None,
+                "prompt_modified": None,
+                "size": size,
+                "path_to_image": None,
+                "timestamp": timestamp,
+                "status": "error"
+            }
+
+            image_generation["content_policy_violation"] = True if 'content_policy_violation' in error_details else False
+
+            return image_generation
 
 class Audio:
     def __init__(self):
