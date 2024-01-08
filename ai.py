@@ -20,7 +20,7 @@ import helpers as h
 from openai import BadRequestError
 
 ## get openai api key from environment variable
-openai.api_key = 'your-api-key-here'
+openai.api_key = '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'
 
 logging = True
 
@@ -42,7 +42,7 @@ class Chat:
         log(logging, f"Initalized Chat class with model {model}", "green")
     
     @staticmethod
-    def augment_phrases(phrases: List[str], augment: bool) -> List[str]:
+    def _augment_phrases(phrases: List[str], augment: bool) -> List[str]:
         """
         Augments phrases by adding spaces, changing case, and ensuring uniqueness.
 
@@ -77,7 +77,7 @@ class Chat:
         if isinstance(suppressed_phrases, dict):
             phrases = list(suppressed_phrases.keys())
         else:
-            phrases = self.augment_phrases(suppressed_phrases, augment)
+            phrases = self._augment_phrases(suppressed_phrases, augment)
 
         logit_bias_dict = {}
         for phrase in phrases:
@@ -137,7 +137,7 @@ class Chat:
             return_messages (bool, optional): Whether to return messages in output dict. Defaults to False.
 
         Returns:
-            tuple: A tuple containing the completion text and the updated messages list.
+            dict: A dictionary containing the completion text and the updated messages list.
         """
         # Check if return_tool_calls is True but tools is None
         if return_tool_calls and tools is None:
@@ -228,7 +228,6 @@ class Chat:
             if current_tool_call:
                 tool_calls.append(current_tool_call)
 
-
         else:
             if logprobs:
                 logprobs_list = h.to_dict(completion.choices[0].logprobs.content)
@@ -299,7 +298,7 @@ class Vision:
         self.system = system
         log(logging, f"Initalized Vision class with model {model}.", "green")
 
-    def encode_image(self, image_path):
+    def _encode_image(self, image_path):
         """
         Encodes an image to a base64 string.
 
@@ -313,7 +312,7 @@ class Vision:
             encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
         return encoded_string
 
-    def construct_image_message(self, image_path: str, detail: str = "auto") -> dict:
+    def _construct_image_message(self, image_path: str, detail: str = "auto") -> dict:
         """
         Constructs the message object for a single image path using the encode_image method.
 
@@ -324,7 +323,7 @@ class Vision:
         Returns:
             dict: The message object for the image.
         """
-        encoded_string = self.encode_image(image_path)
+        encoded_string = self._encode_image(image_path)
         return {
             "type": "image_url",
             "image_url": {
@@ -516,7 +515,7 @@ class Images:
         self.valid_sizes = ["1024x1024", "1792x1024", "1024x1792"]
         log(logging, f"Initalized Images class with model {model}.", "green")
 
-    def check_size(self, size):
+    def _check_size(self, size):
         """
         Checks if the provided size is valid for the model.
 
@@ -530,7 +529,7 @@ class Images:
             raise ValueError(f"Invalid size. Must be one of {self.valid_sizes} for {self.model} model.")
 
     @staticmethod
-    def display_image(image_data, display_image=True, save_image=True, save_dir='images', image_name='image.png'):
+    def _display_image(image_data, display_image=True, save_image=True, save_dir='images', image_name='image.png'):
         """
         Displays and/or saves the image from the provided base64-encoded image data.
 
@@ -576,7 +575,7 @@ class Images:
                 - 'path_to_image' (str): The file system path to the saved image if save_image is True.
                 - 'generation_timestamp' (str): The ISO 8601 timestamp when the image was generated.
         """
-        self.check_size(size)
+        self._check_size(size)
 
         user_prompt = prompt
 
@@ -602,7 +601,7 @@ class Images:
             if display_image:
                 if response_format == "b64_json":
                     b64_json = response.data[0].b64_json
-                    self.display_image(b64_json, display_image, save_image, image_name=image_name)
+                    self._display_image(b64_json, display_image, save_image, image_name=image_name)
                 elif response_format == "url":
                     image_url = response.data[0].url
                     print("Image URL:", image_url)
