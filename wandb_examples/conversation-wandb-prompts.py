@@ -45,7 +45,7 @@ while True:
     if "quit" in transcript:
         break
 
-    completion, messages = chat.chat_completion(transcript, speak=False, stream=True, memories=True)
+    completion = chat.chat_completion(transcript, speak=False, stream=True, memories=True)
 
     # Log the LLM used.
     llm_span = wb.wandb_span(
@@ -53,7 +53,7 @@ while True:
         span_name="chat",
         parent_span_id = chain_span,
         inputs={"system_prompt": system_prompt, "transcript": transcript},
-        outputs={"completion": completion, "messages": messages},
+        outputs=completion,
         metadata={"model_name": model}
     )
 
