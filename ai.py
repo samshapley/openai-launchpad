@@ -19,8 +19,8 @@ from helpers import log
 import helpers as h
 from openai import BadRequestError
 
-## get openai api key
-openai.api_key = 'YOUR API KEY HERE'
+## get openai api key from environment variable
+openai.api_key = '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'
 
 logging = True
 
@@ -109,6 +109,7 @@ class Chat:
         tools: List[dict] = None,
         tool_choice: Union[str, dict] = "auto",
         return_tool_calls: bool = False,
+        return_messages: bool = False,
         ) -> dict:
         """
         Generates a chat completion using the OpenAI API.
@@ -132,7 +133,8 @@ class Chat:
             messages (List[dict], optional): A list of messages to use for the request, i.e if you wish to overwrite. Defaults to None.
             tools (List[dict], optional): A list of tools the model may call. Currently, only functions are supported as a tool. Use this to provide a list of functions the model may generate JSON inputs for. Defaults to None.
             tool_choice (Union[str, dict], optional): Controls which (if any) function is called by the model. "none" means the model will not call a function and instead generates a message. "auto" means the model can pick between generating a message or calling a function. Specifying a particular function via {"type": "function", "function": {"name": "my_function"}} forces the model to call that function. "none" is the default when no functions are present. Defaults to "auto".
-            return_tool_calls (bool, optional): Whether to return tool calls in output tuple. Defaults to False.
+            return_tool_calls (bool, optional): Whether to return tool calls in output dict. Defaults to False.
+            return_messages (bool, optional): Whether to return messages in output dict. Defaults to False.
 
         Returns:
             tuple: A tuple containing the completion text and the updated messages list.
@@ -256,14 +258,31 @@ class Chat:
             audio = Audio()
             audio.speak(chat_content)
 
-        # Construct the output tuple dynamically based on the flags.
-        output_tuple = (chat_content, self.messages)
-        if logprobs:
-            output_tuple += (logprobs_list,)
-        if return_tool_calls:
-            output_tuple += (tool_calls,)
+        # Construct the output dictionary dynamically based on the flags.
+        completion_dict = {
+            "response": chat_content,
+            "prompt": prompt,
+            "parameters": {
+                "temperature": temperature,
+                "top_p": top_p,
+                "frequency_penalty": frequency_penalty,
+                "presence_penalty": presence_penalty,
+                "max_tokens": max_tokens
+            },
+            "seed": seed,
+            "logit_bias": logit_bias
+        }
 
-        return output_tuple
+        if logprobs:
+            completion_dict["logprobs"] = h.to_dict(completion.choices[0].logprobs.content)
+
+        if return_tool_calls:
+            completion_dict["tool_calls"] = tool_calls
+
+        if return_messages:
+            completion_dict["messages"] = self.messages
+
+        return completion_dict
     
 class Vision:
     def __init__(self, model="gpt-4-vision-preview", system=""):
