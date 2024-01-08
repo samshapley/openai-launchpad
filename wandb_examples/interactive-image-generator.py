@@ -88,7 +88,7 @@ def generate_art():
     feedback = input("Please provide feedback on the generated art: ")
 
     # Use rating to improve prompt.
-    prompt_improving_prompt = f"""You need to modfy the image. Take into account the user feedback and current image description to modify the prompt. Return only the new prompt after the colon.
+    prompt_improving_prompt = f"""You need to modify the image. Take into account the user feedback and current image description to modify the prompt. Return only the new prompt after the colon.
 
     User initial request: {user_input}
 

@@ -20,7 +20,7 @@ import helpers as h
 from openai import BadRequestError
 
 ## get openai api key from environment variable
-openai.api_key = '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'
+openai.api_key = 'your-openai-api-key'
 
 logging = True
 
@@ -72,7 +72,7 @@ class Chat:
             augment (bool, optional): Whether to augment the phrases for suppression. Defaults to False.
 
         Returns:
-            dict: A dictionary with tokens as keys and the bias as values.
+            logit_bias_dict (dict): A dictionary with tokens as keys and the bias as values.
         """
         if isinstance(suppressed_phrases, dict):
             phrases = list(suppressed_phrases.keys())
@@ -100,7 +100,7 @@ class Chat:
         json: bool = False, 
         seed: int = None,
         logit_bias: dict = {},
-        logprobs: Union[bool, None] = False,
+        return_logprobs: Union[bool, None] = False,
         top_logprobs: Union[int, None] = None,
         model: str = None,
         speak: bool = False,
@@ -125,7 +125,7 @@ class Chat:
             json (bool, optional): Whether to return the response in JSON format. Defaults to False.
             seed (int, optional): A seed for deterministic completions. Defaults to None.
             logit_bias (dict, optional): A dictionary of logit biases. Defaults to None.
-            logprobs (Union[bool, None], optional): Whether to return log probabilities of the output tokens. Defaults to False.
+            return_logprobs (Union[bool, None], optional): Whether to return log probabilities of the output tokens. Defaults to False.
             top_logprobs (Union[int, None], optional): An integer between 0 and 5 specifying the number of most likely tokens to return at each token position, each with an associated log probability. logprobs must be set to true if this parameter is used.
             model (str, optional): The model to use for the chat completion if different from initialization. Defaults to None.
             speak (bool, optional): Whether to speak the chat completion. Defaults to False.
@@ -137,7 +137,7 @@ class Chat:
             return_messages (bool, optional): Whether to return messages in output dict. Defaults to False.
 
         Returns:
-            dict: A dictionary containing the completion text and the updated messages list.
+            completion_dict (dict): A dictionary containing all the information about the completion.
         """
         # Check if return_tool_calls is True but tools is None
         if return_tool_calls and tools is None:
@@ -172,7 +172,7 @@ class Chat:
             "seed": seed,
             "response_format": response_format,
             "logit_bias": logit_bias,
-            "logprobs": logprobs,
+            "logprobs": return_logprobs,
             "top_logprobs": top_logprobs,
             "stream": stream,
         }
@@ -186,13 +186,34 @@ class Chat:
         # Make the API call
         log(logging, "Making Chat Completion API call...", "purple")
         completion = self.openai.chat.completions.create(**api_call_args)
+
+        chat_content = ""
         
         if stream:
-            chat_content = ""
             current_tool_call = None
             tool_calls = []
+            id = None
+            finish_reason = None
+            system_fingerprint = None
+            created = None
+
+            # Initialize logprobs list to accumulate logprobs from all chunks
+            logprobs = []
 
             for chunk in completion:
+
+                id = chunk.id                                  # Store the completion id
+                created = chunk.created                        # Store the completion created timestamp (in seconds)
+                system_fingerprint = chunk.system_fingerprint  # Store the system fingerprint
+                finish_reason = chunk.choices[0].finish_reason # Store the completion finish reason
+
+                # Extract logprobs if available and requested
+                if return_logprobs:
+                    chunk_logprobs = h.to_dict(chunk.choices[0].logprobs)
+                    if chunk_logprobs:
+                        for logprob in chunk_logprobs['content']:
+                                logprobs.append(logprob)
+
                 delta = chunk.choices[0].delta
                 if delta.content:
                     print(delta.content, end='')
@@ -228,18 +249,16 @@ class Chat:
             if current_tool_call:
                 tool_calls.append(current_tool_call)
 
-        else:
-            if logprobs:
-                logprobs_list = h.to_dict(completion.choices[0].logprobs.content)
-            
-            chat_content = completion.choices[0].message.content # Extract the completion text
+        else: 
+            id = completion.id                                                  # Extract the completion id
+            created = completion.created                                        # The Unix timestamp (in seconds) when the completion was created.
+            system_fingerprint = completion.system_fingerprint                  # This fingerprint represents the backend configuration that the model runs with. Useful in conjuction with seed to understand determinism.
+            finish_reason = completion.choices[0].finish_reason                 # Extract the completion finish reason
+           
+            chat_content = completion.choices[0].message.content or ""          # Extract the completion text
+            tool_calls = h.to_dict(completion.choices[0].message.tool_calls)    # Extract the completion tool calls to dict
+            logprobs   = h.to_dict(completion.choices[0].logprobs.content)      # Extract the completion logprobs to dict
 
-            tool_calls = h.to_dict(completion.choices[0].message.tool_calls) # Extract tool calls to dict
-
-        if chat_content is None:
-            chat_content = ""
-
-        # If memories is False, reset the messages list after each call
         if memories:
             # Construct a new message dictionary to hold the assistant's response.
             new_message = {"role": "assistant", "content": chat_content if chat_content else None}
@@ -249,37 +268,43 @@ class Chat:
             # Append the new message to the messages list
             self.messages.append(new_message)
         else: 
-            self.messages = [{"role": "system", "content": self.system}]
-
-        # If speak is True, generate audio from the completion text
-        if speak:
-            log(logging, f"Generating speech...", "purple")
-            audio = Audio()
-            audio.speak(chat_content)
+            # If memories is False, reset the messages list after each call
+            self.messages = messages or [{"role": "system", "content": self.system}]
 
         # Construct the output dictionary dynamically based on the flags.
         completion_dict = {
             "response": chat_content,
             "prompt": prompt,
+            "model": model,
             "parameters": {
                 "temperature": temperature,
                 "top_p": top_p,
                 "frequency_penalty": frequency_penalty,
                 "presence_penalty": presence_penalty,
-                "max_tokens": max_tokens
-            },
-            "seed": seed,
-            "logit_bias": logit_bias
+                "max_tokens": max_tokens,
+                "seed": seed,
+                        },
+            "logit_bias": logit_bias,
+            "id": id,
+            "created": created,
+            "system_fingerprint": system_fingerprint,
+            "finish_reason": finish_reason,
         }
 
-        if logprobs:
-            completion_dict["logprobs"] = h.to_dict(completion.choices[0].logprobs.content)
+        if return_logprobs:
+            completion_dict["logprobs"] = logprobs
 
         if return_tool_calls:
             completion_dict["tool_calls"] = tool_calls
 
         if return_messages:
             completion_dict["messages"] = self.messages
+
+        # If speak is True, generate audio from the completion text
+        if speak:
+            log(logging, f"Generating speech...", "purple")
+            audio = Audio()
+            audio.speak(chat_content)
 
         return completion_dict
     
@@ -382,7 +407,7 @@ class Vision:
         # If image paths are provided, construct the image messages and add them to the user message content
         if image_paths:
             for image_path in image_paths:
-                image_message = self.construct_image_message(image_path, detail)
+                image_message = self._construct_image_message(image_path, detail)
                 user_message["content"].append(image_message)
 
         # Append the user message to the messages list

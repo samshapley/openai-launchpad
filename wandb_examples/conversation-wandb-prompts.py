@@ -71,7 +71,7 @@ while True:
     )
 
 
-wb.update_span_by_id(agent_span, inputs={"transcript": transcript}, outputs={"messages": messages})
+wb.update_span_by_id(agent_span, inputs={"transcript": transcript}, outputs=completion)
 
 wb.log_top_level_span()
 
