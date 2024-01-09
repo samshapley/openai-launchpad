@@ -61,7 +61,9 @@ def generate_art():
     # Obtain detailed description of image
     get_image_detail = "Please describe the image in detail directly and in all aspects. Return only the description after the colon: "
 
-    image_description, messages = vision.vision_completion(get_image_detail, memories=False, stream=True, image_paths=[image_generation["path_to_image"]])
+    vision_completion = vision.vision_completion(get_image_detail, memories=False, stream=True, image_paths=[image_generation["path_to_image"]])
+
+    image_description = vision_completion["response"]
 
     # Log the vision completion span
     vision_span = wb.wandb_span(
@@ -103,7 +105,9 @@ def generate_art():
     Generate a more aligned image with:
     """
 
-    improved_prompt, messages = vision.vision_completion(prompt_improving_prompt, memories=True, stream=True, image_paths=[image_generation["path_to_image"]])
+    vision_completion = vision.vision_completion(prompt_improving_prompt, memories=True, stream=True, image_paths=[image_generation["path_to_image"]])
+
+    improved_prompt = vision_completion["response"]
 
     # Log the improved prompt span
     improved_prompt_span = wb.wandb_span(

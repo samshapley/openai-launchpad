@@ -58,14 +58,14 @@ while True:
     )
 
     voice = "echo"
-    audio.speak(completion, voice=voice)
+    audio.speak(completion["response"], voice=voice, speed=1.5)
 
     # Log the speech span.
     speech_span = wb.wandb_span(
         span_kind="tool",
         span_name="speech",
         parent_span_id = chain_span,
-        inputs={"completion": completion},
+        inputs={"text": completion["response"]},
         outputs={"tool": "Completion spoken."},
         metadata={"voice": voice}
     )

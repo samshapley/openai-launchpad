@@ -20,7 +20,7 @@ import helpers as h
 from openai import BadRequestError
 
 ## get openai api key from environment variable
-openai.api_key = 'your-openai-api-key'
+openai.api_key = 'your key here'
 
 logging = True
 
@@ -44,7 +44,8 @@ class Chat:
     @staticmethod
     def _augment_phrases(phrases: List[str], augment: bool) -> List[str]:
         """
-        Augments phrases by adding spaces, changing case, and ensuring uniqueness.
+        Augments phrases by adding spaces before and after, changing case, and ensuring uniqueness.
+        Used within logit bias to suppress variations of provided phrases.
 
         Args:
             phrases (List[str]): A list of phrases to augment.
@@ -92,10 +93,10 @@ class Chat:
         self, 
         prompt: str = "", 
         memories: bool = True, 
-        temperature: float = None,
-        top_p: float = None,
-        frequency_penalty: float = None,
-        presence_penalty: float = None, 
+        temperature: float = 1.0,
+        top_p: float = 1.0,
+        frequency_penalty: float = 0.0,
+        presence_penalty: float = 0.0,
         max_tokens: int = None, 
         json: bool = False, 
         seed: int = None,
@@ -112,15 +113,15 @@ class Chat:
         return_messages: bool = False,
         ) -> dict:
         """
-        Generates a chat completion using the OpenAI API.
+        Generates a chat completion using the OpenAI API. Full control over all aspects of the API is native to this method.
 
         Args:
             prompt (str): The user's input prompt for the chat.
             memories (bool, optional): Whether to retain conversation context. Defaults to True.
-            temperature (float, optional): Sampling temperature to use. Defaults to None.
-            top_p (float, optional): Nucleus sampling parameter. Defaults to None.
-            frequency_penalty (float, optional): Adjusts frequency of token usage. Defaults to None.
-            presence_penalty (float, optional): Adjusts presence of token usage. Defaults to None.
+            temperature (float, optional): Sampling temperature to use. Defaults to 1.0.
+            top_p (float, optional): Nucleus sampling parameter. Defaults to 1.0.
+            frequency_penalty (float, optional): Adjusts frequency of token usage. Defaults to 0.0.
+            presence_penalty (float, optional): Adjusts presence of token usage. Defaults to 0.0.
             max_tokens (int, optional): Maximum number of tokens to generate. Defaults to None.
             json (bool, optional): Whether to return the response in JSON format. Defaults to False.
             seed (int, optional): A seed for deterministic completions. Defaults to None.
@@ -137,7 +138,28 @@ class Chat:
             return_messages (bool, optional): Whether to return messages in output dict. Defaults to False.
 
         Returns:
-            completion_dict (dict): A dictionary containing all the information about the completion.
+            completion_dict (dict): A dictionary containing all the information about the completion with the following keys:
+                - 'response' (str): The text of the chat completion.
+                - 'prompt' (str): The original prompt provided by the user.
+                - 'model' (str): The model used for the chat completion.
+                - 'parameters' (dict): A dictionary of the parameters used for the chat completion.
+                    - 'temperature' (float): Sampling temperature used.
+                    - 'top_p' (float): Nucleus sampling parameter used.
+                    - 'frequency_penalty' (float): Frequency penalty used.
+                    - 'presence_penalty' (float): Presence penalty used.
+                    - 'max_tokens' (int): Maximum number of tokens used.
+                    - 'seed' (int): The seed used for deterministic completions.
+                - 'logit_bias' (dict): A dictionary of logit biases used in the completion.
+                - 'id' (str): The unique identifier for the completion.
+                - 'created' (int): The Unix timestamp when the completion was created.
+                - 'system_fingerprint' (str): The backend configuration that the model runs with.
+                - 'finish_reason' (str): The reason the completion ended.
+                - 'logprobs' (list, optional): A list of log probabilities of the output tokens, if requested.
+                - 'tool_calls' (list, optional): A list of tool calls in the output dict, if requested.
+                - 'messages' (list, optional): A list of messages in the output dict, if requested.
+                    - Each message (dict) contains:
+                        - 'role' (str): The role of the message sender ('user', 'assistant', etc.).
+                        - 'content' (list): A list of content objects, each with a 'type' key (e.g., 'text', 'image_url') and corresponding content.
         """
         # Check if return_tool_calls is True but tools is None
         if return_tool_calls and tools is None:
@@ -187,7 +209,7 @@ class Chat:
         log(logging, "Making Chat Completion API call...", "purple")
         completion = self.openai.chat.completions.create(**api_call_args)
 
-        chat_content = ""
+        completion_content = ""
         
         if stream:
             current_tool_call = None
@@ -217,7 +239,7 @@ class Chat:
                 delta = chunk.choices[0].delta
                 if delta.content:
                     print(delta.content, end='')
-                    chat_content += delta.content  # Accumulate the content
+                    completion_content += delta.content  # Accumulate the content
 
                 if delta.tool_calls:
                     # Handle tool calls
@@ -253,15 +275,15 @@ class Chat:
             id = completion.id                                                  # Extract the completion id
             created = completion.created                                        # The Unix timestamp (in seconds) when the completion was created.
             system_fingerprint = completion.system_fingerprint                  # This fingerprint represents the backend configuration that the model runs with. Useful in conjuction with seed to understand determinism.
-            finish_reason = completion.choices[0].finish_reason                 # Extract the completion finish reason
-           
-            chat_content = completion.choices[0].message.content or ""          # Extract the completion text
-            tool_calls = h.to_dict(completion.choices[0].message.tool_calls)    # Extract the completion tool calls to dict
-            logprobs   = h.to_dict(completion.choices[0].logprobs.content)      # Extract the completion logprobs to dict
+            finish_reason = completion.choices[0].finish_reason                 # The reason the completion ended.
+            completion_content = completion.choices[0].message.content or ""    # The content of the completion.
+            tool_calls = h.to_dict(completion.choices[0].message.tool_calls)    # Extract the completion tool calls to dict.
+            if return_logprobs:
+                logprobs   = h.to_dict(completion.choices[0].logprobs.content)  # Extract the completion logprobs to dict
 
         if memories:
             # Construct a new message dictionary to hold the assistant's response.
-            new_message = {"role": "assistant", "content": chat_content if chat_content else None}
+            new_message = {"role": "assistant", "content": completion_content if completion_content else None}
             # If there are tool calls, add them to the message
             if tool_calls:
                 new_message["tool_calls"] = tool_calls
@@ -271,9 +293,9 @@ class Chat:
             # If memories is False, reset the messages list after each call
             self.messages = messages or [{"role": "system", "content": self.system}]
 
-        # Construct the output dictionary dynamically based on the flags.
+        # Construct the output dictionary dynamically based on the flags. Set parameters to defaults if not provided.
         completion_dict = {
-            "response": chat_content,
+            "response": completion_content,
             "prompt": prompt,
             "model": model,
             "parameters": {
@@ -304,7 +326,7 @@ class Chat:
         if speak:
             log(logging, f"Generating speech...", "purple")
             audio = Audio()
-            audio.speak(chat_content)
+            audio.speak(completion_content)
 
         return completion_dict
     
@@ -343,19 +365,32 @@ class Vision:
 
         Args:
             image_path (str): The path to the image file.
-            detail (str): The level of detail requested for the image. Defaults to "auto".
+            detail (str): The level of detail requested for the image. Options are 'low', 'high', or 'auto':
+                - 'low': The model processes a low-res 512px x 512px version of the image, using a budget of 65 tokens. 
+                        This setting is faster and uses fewer tokens, suitable for use cases that don't require high detail.
+                - 'high': The model first sees the low-res image, then processes detailed 512px square crops of the input image. 
+                        Each crop uses a budget of 129 tokens, allowing for a more detailed understanding of the image.
+                - 'auto': The model decides whether to use 'low' or 'high' based on the input image size. This is the default setting.
+            Defaults to "auto".
 
         Returns:
-            dict: The message object for the image.
+            image_message: The message object for the image.
+                - 'type' (str): The type of message, i.e. "image_url".
+                - 'image_url' (dict): A dictionary containing the URL of the image and the detail level.
+                    - 'url' (str): The URL of the image.
+                    - 'detail' (str): The level of detail requested for the image.
         """
         encoded_string = self._encode_image(image_path)
-        return {
+
+        image_message = {
             "type": "image_url",
             "image_url": {
                 "url": f"data:image/jpeg;base64,{encoded_string}",
                 "detail": detail
             }
         }
+               
+        return image_message
     
     def vision_completion(
         self, 
@@ -363,15 +398,19 @@ class Vision:
         image_paths: List[str] = None,
         detail: str = "auto",
         memories: bool = True, 
-        temperature: float = None,
-        top_p: float = None,
-        frequency_penalty: float = None,
-        presence_penalty: float = None,
+        temperature: float = 1.0,
+        top_p: float = 1.0,
+        frequency_penalty: float = 0.0,
+        presence_penalty: float = 0.0,
         max_tokens: int = 250,
         seed: int = None,
-        speak: bool = False,
+        # logit_bias: dict = {}, # Currently not supported for vision completions.
+        # return_logprobs: Union[bool, None] = False, # Currently not supported for vision completions.
+        # top_logprobs: Union[int, None] = None, # Currently not supported for vision completions.
         stream: bool = False,
+        speak: bool = False,
         messages: List[dict] = None,
+        return_messages: bool = False,
         ) -> dict:
         """
         Generates a vision completion using the OpenAI API.
@@ -379,20 +418,45 @@ class Vision:
         Args:
             prompt (str): The user's input prompt for the vision task.
             image_paths (List[str], optional): A list of image paths to include in the request.
-            detail (str, optional): The level of detail requested for the images. Defaults to "auto".
+            detail (str): The level of detail requested for the images. Options are 'low', 'high', or 'auto':
+                - 'low': The model processes a low-res 512px x 512px version of the image, using a budget of 65 tokens. 
+                        This setting is faster and uses fewer tokens, suitable for use cases that don't require high detail.
+                - 'high': The model first sees the low-res image, then processes detailed 512px square crops of the input image. 
+                        Each crop uses a budget of 129 tokens, allowing for a more detailed understanding of the image.
+                - 'auto': The model decides whether to use 'low' or 'high' based on the input image size. This is the default setting.
+            Defaults to "auto".
             memories (bool, optional): Whether to retain conversation context. Defaults to True.
-            temperature (float, optional): Sampling temperature to use. Defaults to None.
-            top_p (float, optional): Nucleus sampling parameter. Defaults to None.
-            frequency_penalty (float, optional): Adjusts frequency of token usage. Defaults to None.
-            presence_penalty (float, optional): Adjusts presence of token usage. Defaults to None.
+            temperature (float, optional): Sampling temperature to use. Defaults to 1.0.
+            top_p (float, optional): Nucleus sampling parameter. Defaults to 1.0.
+            frequency_penalty (float, optional): Adjusts frequency of token usage. Defaults to 0.0.
+            presence_penalty (float, optional): Adjusts presence of token usage. Defaults to 0.0.
             max_tokens (int, optional): Maximum number of tokens to generate. Defaults to 250.
             seed (int, optional): A seed for deterministic completions. Defaults to None.
             speak (bool, optional): Whether to speak the vision completion. Defaults to False.
             stream (bool, optional): Whether to stream the response. Defaults to False.
             messages (List[dict], optional): A list of messages to use for the request, i.e if you wish to overwrite. Defaults to None.
+            return_messages (bool, optional): Whether to return messages in output dict. Defaults to False.
 
         Returns:
-            dict: A dictionary containing the completion text and the updated messages list.
+            dict: A dictionary containing all the information about the completion with the following keys:
+                - 'response' (str): The text of the vision completion.
+                - 'prompt' (str): The original prompt provided by the user.
+                - 'model' (str): The model used for the vision completion.
+                - 'parameters' (dict): A dictionary of the parameters used for the vision completion.
+                    - 'temperature' (float): Sampling temperature used.
+                    - 'top_p' (float): Nucleus sampling parameter used.
+                    - 'frequency_penalty' (float): Frequency penalty used.
+                    - 'presence_penalty' (float): Presence penalty used.
+                    - 'max_tokens' (int): Maximum number of tokens used.
+                    - 'seed' (int): The seed used for deterministic completions.
+                - 'id' (str): The unique identifier for the completion.
+                - 'created' (int): The Unix timestamp when the completion was created.
+                - 'system_fingerprint' (str): The backend configuration that the model runs with.
+                - 'finish_reason' (str): The reason the completion ended.
+                - 'messages' (list, optional): A list of messages in the output dict, if requested.
+                    - Each message (dict) contains:
+                        - 'role' (str): The role of the message sender ('user', 'assistant', etc.).
+                        - 'content' (list): A list of content objects, each with a 'type' key (e.g., 'text', 'image_url') and corresponding content.
         """
 
         # Use the provided messages if available, otherwise use self.messages
@@ -423,6 +487,9 @@ class Vision:
             "presence_penalty": presence_penalty,
             "max_tokens": max_tokens,
             "seed": seed,
+            # "logit_bias": logit_bias,
+            # "logprobs": return_logprobs,
+            # "top_logprobs": top_logprobs,
             "stream": stream,
         }
 
@@ -430,31 +497,81 @@ class Vision:
         log(logging, "Making Vision Completion API call...", "purple")
         completion = self.openai.chat.completions.create(**api_call_args)
 
+        completion_content = ""
+        id = None
+        created = None
+        system_fingerprint = None
+        finish_reason = None
+        # logprobs = []
+
         if stream:
-            chat = []
             for chunk in completion:
-                msg = chunk.choices[0].delta.content
-                if msg is not None:
-                    print(msg, end='')
-                    chat.append(msg)
-                        
-            chat_content = "".join(chat)
-        else:    
-            chat_content = completion.choices[0].message.content
+                id = chunk.id
+                created = chunk.created
+                system_fingerprint = chunk.system_fingerprint
+                finish_reason = chunk.choices[0].finish_reason
+
+                # if return_logprobs:
+                #     chunk_logprobs = h.to_dict(chunk.choices[0].logprobs)
+                #     if chunk_logprobs:
+                #         logprobs.extend(chunk_logprobs['content'])
+
+                delta = chunk.choices[0].delta
+                if delta.content:
+                    print(delta.content, end='')
+                    completion_content += delta.content
+        else:
+            id = completion.id
+            created = completion.created
+            system_fingerprint = completion.system_fingerprint
+            finish_reason = completion.choices[0].finish_reason
+            completion_content = completion.choices[0].message.content or ""
+            # if return_logprobs:
+            #     logprobs = h.to_dict(completion.choices[0].logprobs.content)
+
         print("\n")
+
+        if memories:
+            # Construct a new message dictionary to hold the assistant's response.
+            new_message = {"role": "assistant", "content": completion_content if completion_content else None}
+
+            # Append the new message to the messages list
+            self.messages.append(new_message)
+        else: 
+            # If memories is False, reset the messages list after each call
+            self.messages = messages or [{"role": "system", "content": self.system}]
+
+        completion_dict = {
+            "response": completion_content,
+            "prompt": prompt,
+            "model": self.model,
+            "parameters": {
+                "temperature": temperature,
+                "top_p": top_p,
+                "frequency_penalty": frequency_penalty,
+                "presence_penalty": presence_penalty,
+                "max_tokens": max_tokens,
+                "seed": seed,
+            },
+            # "logit_bias": logit_bias,
+            "id": id,
+            "created": created,
+            "system_fingerprint": system_fingerprint,
+            "finish_reason": finish_reason,
+        }
+
+        # if return_logprobs:
+        #     completion_dict["logprobs"] = logprobs
+
+        if return_messages:
+            completion_dict["messages"] = self.messages
 
         # If speak is True, generate audio from the completion text
         if speak:
             audio = Audio()
-            audio.speak(chat_content)
+            audio.speak(completion_content)
 
-        # If memories is False, reset the messages list after each call
-        if not memories:
-            self.messages = [{"role": "system", "content": self.system}]
-        else:
-            self.messages.append({"role": "assistant", "content": chat_content})
-
-        return chat_content, self.messages
+        return completion_dict
  
 class Embeddings:
     def __init__(self, embedding_model="text-embedding-ada-002", encoding_format=None):
