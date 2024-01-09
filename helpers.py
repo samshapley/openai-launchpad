@@ -20,7 +20,7 @@ def log(logging_enabled, message, color=None):
             print(COLORS[color] + message + COLORS["end"])
         else:
             print(message)
-        print('---------------------------------------------\n')
+        print('---------------------------------------------')
 
 def to_dict(obj):
     """

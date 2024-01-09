@@ -45,7 +45,7 @@ while True:
     if "quit" in transcript:
         break
 
-    completion, messages = chat.chat_completion(transcript, speak=False, stream=True, memories=True)
+    completion = chat.chat_completion(transcript, speak=False, stream=True, memories=True)
 
     # Log the LLM used.
     llm_span = wb.wandb_span(
@@ -53,25 +53,25 @@ while True:
         span_name="chat",
         parent_span_id = chain_span,
         inputs={"system_prompt": system_prompt, "transcript": transcript},
-        outputs={"completion": completion, "messages": messages},
+        outputs=completion,
         metadata={"model_name": model}
     )
 
     voice = "echo"
-    audio.speak(completion, voice=voice)
+    audio.speak(completion["response"], voice=voice, speed=1.5)
 
     # Log the speech span.
     speech_span = wb.wandb_span(
         span_kind="tool",
         span_name="speech",
         parent_span_id = chain_span,
-        inputs={"completion": completion},
+        inputs={"text": completion["response"]},
         outputs={"tool": "Completion spoken."},
         metadata={"voice": voice}
     )
 
 
-wb.update_span_by_id(agent_span, inputs={"transcript": transcript}, outputs={"messages": messages})
+wb.update_span_by_id(agent_span, inputs={"transcript": transcript}, outputs=completion)
 
 wb.log_top_level_span()
 
