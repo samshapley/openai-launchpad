@@ -22,7 +22,7 @@ from datetime import timedelta
 import requests
 
 ## get openai api key from environment variable
-openai.api_key = os.getenv("OPENAI_API_KEY")
+openai.api_key = "your key here"
 
 logging = True
 
@@ -846,7 +846,7 @@ class Audio:
         self.openai = openai
         log(logging, f"Initalized Audio class.", "green")
 
-    def speak(self, text, model="tts-1", voice="onyx", response_format="opus", speed=1.0, save=False, file_name=None, save_dir='media/audio'):
+    def speak(self, text, model="tts-1", voice="onyx", response_format="opus", speed=1.0, play_audio = True, save_audio = False, file_name=None, save_dir='media/audio', return_audio=False):
         """
         Generates audio from the input text and plays it in real-time. Optionally saves the audio to a file.
 
@@ -856,9 +856,11 @@ class Audio:
             voice (str): The voice to use when generating the audio. Supported voices are alloy, echo, fable, onyx, nova, and shimmer.
             response_format (str): The format to audio in. Supported formats are mp3, opus, aac, and flac. Defaults to 'opus'.
             speed (float): The speed of the generated audio. Select a value from 0.25 to 4.0. Defaults to 1.0.
-            save (bool): Whether to save the generated audio. Defaults to True.
+            play_audio (bool): Whether to play the generated audio out loud. Defaults to True.
+            save_audio (bool): Whether to save the generated audio. Defaults to False.
             file_name (str): The name of the audio file to save. If none is provided, defaults to timestamp.{response_format}.
             save_dir (str): The directory where the audio will be saved. Defaults to 'media/audio'.
+            return_audio (bool): Whether to return the audio as a numpy array. Defaults to False.
 
         Returns:
             speech_dict: Information about the generated speech with the following keys:
@@ -872,9 +874,12 @@ class Audio:
                 - 'end_time' (str): The ISO 8601 timestamp when the audio generation ended.
                 - 'duration_ms' (float): The duration of the generated audio in milliseconds.
                 - 'words_per_minute' (float): The number of words spoken per minute in the generated audio.
+                - 'audio' (numpy array, optional): The audio as a numpy array, if return_audio is True.
+                - 'sample_rate' (int, optional): The sample rate of the audio, if return_audio is True.
         """
 
         log(logging, "Making Speech API call...", "purple")
+
         spoken_response = self.openai.audio.speech.create(
             model=model,
             voice=voice,
@@ -898,7 +903,7 @@ class Audio:
             words_per_minute = words / (duration_ms / 60000.0)
 
         # Save the audio file if requested
-        if save:
+        if save_audio:
             if not file_name:
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 file_name = f'{timestamp}.{response_format}'
@@ -911,22 +916,29 @@ class Audio:
             with open(path_to_recording, 'wb') as f:
                 f.write(buffer.getvalue())
 
-        # Play the audio
-        sd.play(data, sound_file.samplerate)
-        sd.wait()
+        # Play the audio if requested
+        if play_audio:
+            sd.play(data, sound_file.samplerate)
+            sd.wait()
 
-        return {
+        speech_dict = {
             "text": text,
             "speed": speed,
             "voice": voice,
             "model": model,
             "response_format": response_format,
-            "file_path": path_to_recording if save else None,
+            "file_path": path_to_recording if save_audio else None,
             "start_time": start_time.isoformat(),
             "end_time": end_time.isoformat(),
             "duration_ms": duration_ms,
             "words_per_minute": words_per_minute
         }
+    
+        if return_audio:
+            speech_dict["audio"] = data
+            speech_dict["sample_rate"] = sound_file.samplerate
+   
+        return speech_dict
     
     def transcribe(self, file_path, model="whisper-1", language=None, prompt=None, response_format="json", temperature=0):
         """
