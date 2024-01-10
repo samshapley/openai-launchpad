@@ -20,7 +20,7 @@ import helpers as h
 from openai import BadRequestError
 
 ## get openai api key from environment variable
-openai.api_key = 'your key here'
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 logging = True
 

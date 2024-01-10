@@ -1,11 +1,11 @@
-# set directory so i can import packages from one level up
+# Go to root path
 import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append("..")
 
-from ai import Images, Vision
+from ai import Images, Vision, Embeddings
 import wandb
 from wandb_logging import WandbSpanManager
+import Levenshtein
 
 # Function to perform the art generation process
 def generate_art():
@@ -17,9 +17,10 @@ def generate_art():
     # Start the chain for logging
     chain_span = wb.wandb_span(span_kind="chain", span_name="art_generation", parent_span_id=None)
 
-    # Generate art from prompt
+    # Initialize AI models.
     images = Images()
     vision = Vision()
+    embeddings = Embeddings()
 
     attempt = 0
     while True:
@@ -91,7 +92,8 @@ def generate_art():
 
     # Use rating to improve prompt.
     prompt_improving_prompt = f"""You need to modify the image. Take into account the user feedback and current image description to modify the prompt. Return only the new prompt after the colon.
-
+    Remember to only modify as much as necessary to improve the image, users might only want a slight change of style or scene.
+    
     User initial request: {user_input}
 
     LLM revised prompt used to generate image: {image_generation["revised_prompt"]}
@@ -132,9 +134,15 @@ def generate_art():
         parent_span_id=chain_span
     )
 
-    columns = ["user_input", "revised_prompt", "image_description", "rating", "feedback", "improved_prompt", "original_image", "improved_image"]
+    columns = ["user_input", "revised_prompt", "image_description", "rating", "feedback", "improved_prompt", "levenshtein_distance", "cosine_similarity",  "original_image", "improved_image"]
 
     art_table = wandb.Table(columns=columns)
+
+    # Get levenstein distance between original and improved prompt
+    levenstein_distance = Levenshtein.distance(image_generation["revised_prompt"], improved_prompt)
+
+    # Get cosine similarity between original and improved prompt
+    cosine_similarity = embeddings.string_similarity(image_generation["revised_prompt"], improved_prompt)
 
     # Add data to the table
     art_table.add_data(user_input,
@@ -143,8 +151,11 @@ def generate_art():
                        rating,
                        feedback,
                        improved_prompt,
+                       levenstein_distance,
+                       cosine_similarity,
                        wandb.Image(image_generation["path_to_image"], caption="Original Image"),
                        wandb.Image(improved_image_generation["path_to_image"], caption="Improved Image"))
+    
 
     # Log the table
     wandb.log({"Art Gallery": art_table})
