@@ -34,8 +34,7 @@ while True:
     chain_span = wb.wandb_span(span_kind = "chain", span_name=chain_name, parent_span_id=agent_span)
 
     transcript = audio.record_and_transcribe()
-    # transcript = "This is a test."
-    time.sleep(1)
+    print(transcript)
 
     transcript_span = wb.wandb_span(
         span_kind="tool",
@@ -62,15 +61,15 @@ while True:
 
     if speak:
         voice = "echo"
-        audio.speak(completion["response"], voice=voice, speed=1.5)
+        audio_dict = audio.speak(completion["response"], voice=voice, speed=1.0, return_audio=False, play_audio=True)
 
         # Log the speech span.
         speech_span = wb.wandb_span(
             span_kind="tool",
             span_name="speech",
-            parent_span_id = chain_span,
+            parent_span_id = llm_span,
             inputs={"text": completion["response"]},
-            outputs={"tool": "Completion spoken."},
+            outputs=audio_dict,
             metadata={"voice": voice}
         )
 

@@ -18,9 +18,11 @@ from collections import defaultdict
 from helpers import log
 import helpers as h
 from openai import BadRequestError
+from datetime import timedelta
+import requests
 
 ## get openai api key from environment variable
-openai.api_key = os.getenv("OPENAI_API_KEY")
+openai.api_key = "your api key"
 
 logging = True
 
@@ -359,12 +361,13 @@ class Vision:
             encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
         return encoded_string
 
-    def _construct_image_message(self, image_path: str, detail: str = "auto") -> dict:
+    def _construct_image_message(self, image_path: str = None, image_url: str = None, detail: str = "auto") -> dict:
         """
-        Constructs the message object for a single image path using the encode_image method.
+        Constructs the message object for a single image path using the encode_images, or is a url is provided.
 
         Args:
             image_path (str): The path to the image file.
+            image_url (str): The URL of the image.
             detail (str): The level of detail requested for the image. Options are 'low', 'high', or 'auto':
                 - 'low': The model processes a low-res 512px x 512px version of the image, using a budget of 65 tokens. 
                         This setting is faster and uses fewer tokens, suitable for use cases that don't require high detail.
@@ -380,12 +383,19 @@ class Vision:
                     - 'url' (str): The URL of the image.
                     - 'detail' (str): The level of detail requested for the image.
         """
-        encoded_string = self._encode_image(image_path)
+
+        if image_path:
+            encoded_string = self._encode_image(image_path)
+            image_data = f"data:image/jpeg;base64,{encoded_string}"
+        elif image_url:
+            image_data = image_url
+        else:
+            raise ValueError("Either image_path or image_url must be provided.")
 
         image_message = {
             "type": "image_url",
             "image_url": {
-                "url": f"data:image/jpeg;base64,{encoded_string}",
+                "url": image_data,
                 "detail": detail
             }
         }
@@ -396,6 +406,7 @@ class Vision:
         self, 
         prompt: str, 
         image_paths: List[str] = None,
+        image_urls: List[str] = None,
         detail: str = "auto",
         memories: bool = True, 
         temperature: float = 1.0,
@@ -418,6 +429,7 @@ class Vision:
         Args:
             prompt (str): The user's input prompt for the vision task.
             image_paths (List[str], optional): A list of image paths to include in the request.
+            image_urls (List[str], optional): A list of image URLs to include in the request.
             detail (str): The level of detail requested for the images. Options are 'low', 'high', or 'auto':
                 - 'low': The model processes a low-res 512px x 512px version of the image, using a budget of 65 tokens. 
                         This setting is faster and uses fewer tokens, suitable for use cases that don't require high detail.
@@ -472,6 +484,12 @@ class Vision:
         if image_paths:
             for image_path in image_paths:
                 image_message = self._construct_image_message(image_path, detail)
+                user_message["content"].append(image_message)
+
+        # If image URLs are provided, construct the image messages and add them to the user message content
+        if image_urls:
+            for image_url in image_urls:
+                image_message = self._construct_image_message(image_url=image_url, detail=detail)
                 user_message["content"].append(image_message)
 
         # Append the user message to the messages list
@@ -671,30 +689,33 @@ class Images:
             raise ValueError(f"Invalid size. Must be one of {self.valid_sizes} for {self.model} model.")
 
     @staticmethod
-    def _display_image(image_data, display_image=True, save_image=True, save_dir='images', image_name='image.png'):
+    def _display_image(image_data_or_url, display_image=True, save_image=True, save_dir='media/images', image_name='image.png'):
         """
-        Displays and/or saves the image from the provided base64-encoded image data.
+        Displays and/or saves the image from the provided base64-encoded image data or URL.
 
         Args:
-            image_data (str): The base64-encoded image data.
+            image_data_or_url (str): The base64-encoded image data or the URL of the image.
             display_image (bool): Whether to display the image. Defaults to True.
             save_image (bool): Whether to save the image to the filesystem. Defaults to True.
-            save_dir (str): The directory where the image will be saved. Defaults to 'images'.
+            save_dir (str): The directory where the image will be saved. Defaults to 'media/images'.
             image_name (str): The name of the image file. Defaults to 'image.png'.
         """
         image_path = os.path.join(save_dir, image_name)
-        with io.BytesIO(base64.b64decode(image_data)) as image_buffer, \
-            PilImage.open(image_buffer) as image:
-            
+        if image_data_or_url.startswith('http'):  # If it's a URL
+            response = requests.get(image_data_or_url)
+            image_data = response.content
+        else:  # Base64 data
+            image_data = base64.b64decode(image_data_or_url)
+
+        with io.BytesIO(image_data) as image_buffer, PilImage.open(image_buffer) as image:
             if display_image:
                 image.show()
-
             if save_image:
                 if not os.path.exists(save_dir):
                     os.makedirs(save_dir)
                 image.save(image_path)
 
-    def generate_image(self, prompt, fix_prompt=False, size="1024x1024", response_format="b64_json", display_image=False, save_image=True):
+    def generate_image(self, prompt, fix_prompt=False, size="1024x1024", quality=None , style=None , response_format="url", display_image=False, save_image=True, image_name=None, save_dir='media/images', return_b64_json=False):
         """
         Generates an image based on the provided prompt and parameters.
 
@@ -702,22 +723,32 @@ class Images:
             prompt (str): The prompt to generate the image from.
             fix_prompt (bool): If True, DALLE-3 will be instructed to use the prompt as-is, i.e no auto revision of prompt. Defaults to False.
             size (str): The size of the generated images. Defaults to "1024x1024".
-            response_format (str): The format of the response. Defaults to "b64_json".
+            quality (str, optional): The quality of the generated images. Defaults to None. "hd" creates images with finer details and greater consistency across the image.
+            style (str, optional): The style of the generated images. Defaults to None. Must be one of "vivid" (hyper-real images) or natural (realistic images).
+            response_format (str): The format of the response. Defaults to "url".
             display_image (bool): Whether to display the generated images. Defaults to False.
             save_image (bool): Whether to save the generated images. Defaults to True.
+            image_name (str, optional): The name of the image file. If none is provided, defaults to timestamp.png.
+            save_dir (str): The directory where the image will be saved. Defaults to 'media/images'.
+            return_b64_json (bool): Whether to return the base64-encoded JSON string of the generated image. Defaults to False as this is a very large string.
 
         Returns:
             dict: A JSON object containing the following keys:
-                - 'b64_json' (str): The base64-encoded JSON string of the generated image if response_format is "b64_json".
-                - 'url' (str): The URL of the generated image if response_format is "url".
+                - 'url' (str, optional): The URL of the generated image if response_format is "url".
+                - 'b64_json' (str, optional): The base64-encoded JSON string of the generated image if response_format is "b64_json" and return_b64_json is True.
                 - 'user_prompt' (str): The original prompt provided by the user.
                 - 'revised_prompt' (str): The prompt that was used to generate the image, if there was any revision to the prompt.
                 - 'prompt_modified' (bool): A flag indicating whether the prompt was modified or not.
                 - 'size' (str): The size of the generated image.
+                - 'quality' (str): The quality of the generated image, if any.
+                - 'style' (str): The style of the generated image, if any.
                 - 'path_to_image' (str): The file system path to the saved image if save_image is True.
-                - 'generation_timestamp' (str): The ISO 8601 timestamp when the image was generated.
+                - 'timestamp' (str): The ISO 8601 timestamp when the image was generated.
         """
         self._check_size(size)
+
+        if return_b64_json and response_format == "url":
+            raise ValueError("return_b64_json cannot be True if response_format is 'url'.")
 
         user_prompt = prompt
 
@@ -726,43 +757,59 @@ class Images:
 
         log(logging, "Making Image Generation API call...", "purple")
 
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S") # Timestamp for image generation
-        try:
-            response = self.openai.images.generate(
-                model=self.model,
-                prompt=prompt,
-                n=1,
-                size=size,
-                response_format=response_format,
-            )
+        api_call_args = {
+            "model": self.model,
+            "prompt": prompt,
+            "n": 1,
+            "size": size,
+            "response_format": response_format,
+        }
 
-            if save_image:
-                image_name = f'{timestamp}.png'
-                image_path = os.path.join('images', image_name)
-        
-            if display_image:
+        if quality:
+            api_call_args["quality"] = quality
+        if style:
+            api_call_args["style"] = style
+
+        try:
+            response = self.openai.images.generate(**api_call_args)
+
+            created = response.created # The Unix timestamp when the image was generated
+
+            # After the API call
+            if save_image or display_image:
+                if not image_name:
+                    image_name = f'{created}.png'
+                image_path = os.path.join(save_dir, image_name)
+
                 if response_format == "b64_json":
-                    b64_json = response.data[0].b64_json
-                    self._display_image(b64_json, display_image, save_image, image_name=image_name)
+                    image_data_or_url = response.data[0].b64_json
                 elif response_format == "url":
-                    image_url = response.data[0].url
-                    print("Image URL:", image_url)
+                    image_data_or_url = response.data[0].url
+
+                self._display_image(image_data_or_url, display_image, save_image, save_dir=save_dir, image_name=image_name)
 
             revised_prompt = response.data[0].revised_prompt # The prompt that was used to generate the image, if there was any revision to the prompt.
 
-            prompt_modified = revised_prompt != prompt # Whether the prompt was modified or not.
+            prompt_modified = revised_prompt != user_prompt # Whether the prompt was modified or not.
 
             image_generation = {
-                # "b64_json": b64_json,
                 "url": None if response_format == "b64_json" else response.data[0].url,
                 "user_prompt": user_prompt,
                 "revised_prompt": revised_prompt,
                 "prompt_modified": prompt_modified,
                 "size": size,
-                "path_to_image": image_path,
-                "timestamp": timestamp,
+                "quality": quality,
+                "style": style,
+                "model": self.model,
+                "timestamp": created,
                 "status": "success"
             }
+
+            if save_image:
+                image_generation["path_to_image"] = image_path
+
+            if return_b64_json and response_format == "b64_json":
+                image_generation["b64_json"] = response.data[0].b64_json
 
             return image_generation
 
@@ -775,14 +822,18 @@ class Images:
             else:
                 print("BadRequestError:", error_details)
 
+            created = datetime.now().isoformat()
+
             image_generation = {
                 "url": None,
                 "user_prompt": user_prompt,
                 "revised_prompt": None,
                 "prompt_modified": None,
                 "size": size,
+                "quality": quality,
+                "style": style,
                 "path_to_image": None,
-                "timestamp": timestamp,
+                "timestamp": created,
                 "status": "error"
             }
 
@@ -795,9 +846,9 @@ class Audio:
         self.openai = openai
         log(logging, f"Initalized Audio class.", "green")
 
-    def speak(self, text, model="tts-1", voice="onyx", response_format="opus", speed=1.0):
+    def speak(self, text, model="tts-1", voice="onyx", response_format="opus", speed=1.0, play_audio = True, save_audio = False, file_name=None, save_dir='media/audio', return_audio=False):
         """
-        Generates audio from the input text and plays it in real-time.
+        Generates audio from the input text and plays it in real-time. Optionally saves the audio to a file.
 
         Args:
             text (str): The text to generate audio for. The maximum length is 4096 characters.
@@ -805,9 +856,30 @@ class Audio:
             voice (str): The voice to use when generating the audio. Supported voices are alloy, echo, fable, onyx, nova, and shimmer.
             response_format (str): The format to audio in. Supported formats are mp3, opus, aac, and flac. Defaults to 'opus'.
             speed (float): The speed of the generated audio. Select a value from 0.25 to 4.0. Defaults to 1.0.
+            play_audio (bool): Whether to play the generated audio out loud. Defaults to True.
+            save_audio (bool): Whether to save the generated audio. Defaults to False.
+            file_name (str): The name of the audio file to save. If none is provided, defaults to timestamp.{response_format}.
+            save_dir (str): The directory where the audio will be saved. Defaults to 'media/audio'.
+            return_audio (bool): Whether to return the audio as a numpy array. Defaults to False.
+
+        Returns:
+            speech_dict: Information about the generated speech with the following keys:
+                - 'text' (str): The original text provided for speech generation.
+                - 'speed' (float): The speed at which the audio was generated.
+                - 'voice' (str): The voice used to generate the audio.
+                - 'model' (str): The TTS model used for generating the audio.
+                - 'response_format' (str): The format of the generated audio file.
+                - 'file_path' (str, optional): The file path where the audio was saved, if saving was requested.
+                - 'start_time' (str): The ISO 8601 timestamp when the audio generation started.
+                - 'end_time' (str): The ISO 8601 timestamp when the audio generation ended.
+                - 'duration_ms' (float): The duration of the generated audio in milliseconds.
+                - 'words_per_minute' (float): The number of words spoken per minute in the generated audio.
+                - 'audio' (numpy array, optional): The audio as a numpy array, if return_audio is True.
+                - 'sample_rate' (int, optional): The sample rate of the audio, if return_audio is True.
         """
 
         log(logging, "Making Speech API call...", "purple")
+
         spoken_response = self.openai.audio.speech.create(
             model=model,
             voice=voice,
@@ -815,16 +887,58 @@ class Audio:
             response_format=response_format,
             speed=speed
         )
-
+        
         buffer = io.BytesIO()
         for chunk in spoken_response.iter_bytes(chunk_size=4096):
             buffer.write(chunk)
         buffer.seek(0)
 
+        # Calculate the length of the audio in milliseconds
         with sf.SoundFile(buffer, 'r') as sound_file:
             data = sound_file.read(dtype='int16')
+            duration_ms = len(data) / sound_file.samplerate * 1000
+            start_time = datetime.now()
+            end_time = start_time + timedelta(milliseconds=duration_ms)
+            words = len(text.split())
+            words_per_minute = words / (duration_ms / 60000.0)
+
+        # Save the audio file if requested
+        if save_audio:
+            if not file_name:
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                file_name = f'{timestamp}.{response_format}'
+            
+            if not os.path.exists(save_dir):
+                os.makedirs(save_dir)
+
+            path_to_recording = os.path.join(save_dir, file_name)
+
+            with open(path_to_recording, 'wb') as f:
+                f.write(buffer.getvalue())
+
+        # Play the audio if requested
+        if play_audio:
             sd.play(data, sound_file.samplerate)
             sd.wait()
+
+        speech_dict = {
+            "text": text,
+            "speed": speed,
+            "voice": voice,
+            "model": model,
+            "response_format": response_format,
+            "file_path": path_to_recording if save_audio else None,
+            "start_time": start_time.isoformat(),
+            "end_time": end_time.isoformat(),
+            "duration_ms": duration_ms,
+            "words_per_minute": words_per_minute
+        }
+    
+        if return_audio:
+            speech_dict["audio"] = data
+            speech_dict["sample_rate"] = sound_file.samplerate
+   
+        return speech_dict
     
     def transcribe(self, file_path, model="whisper-1", language=None, prompt=None, response_format="json", temperature=0):
         """
@@ -969,7 +1083,7 @@ class Audio:
         os.remove(file_path)
 
         return translation
-
+  
 class Files:
     def __init__(self):
         self.openai = openai
