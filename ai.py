@@ -18,9 +18,10 @@ from collections import defaultdict
 from helpers import log
 import helpers as h
 from openai import BadRequestError
+from datetime import timedelta
 
 ## get openai api key from environment variable
-openai.api_key = os.getenv("OPENAI_API_KEY")
+openai.api_key = "your key here"
 
 logging = True
 
@@ -671,7 +672,7 @@ class Images:
             raise ValueError(f"Invalid size. Must be one of {self.valid_sizes} for {self.model} model.")
 
     @staticmethod
-    def _display_image(image_data, display_image=True, save_image=True, save_dir='images', image_name='image.png'):
+    def _display_image(image_data, display_image=True, save_image=True, save_dir='media/images', image_name='image.png'):
         """
         Displays and/or saves the image from the provided base64-encoded image data.
 
@@ -679,7 +680,7 @@ class Images:
             image_data (str): The base64-encoded image data.
             display_image (bool): Whether to display the image. Defaults to True.
             save_image (bool): Whether to save the image to the filesystem. Defaults to True.
-            save_dir (str): The directory where the image will be saved. Defaults to 'images'.
+            save_dir (str): The directory where the image will be saved. Defaults to 'media/images'.
             image_name (str): The name of the image file. Defaults to 'image.png'.
         """
         image_path = os.path.join(save_dir, image_name)
@@ -694,7 +695,7 @@ class Images:
                     os.makedirs(save_dir)
                 image.save(image_path)
 
-    def generate_image(self, prompt, fix_prompt=False, size="1024x1024", response_format="b64_json", display_image=False, save_image=True):
+    def generate_image(self, prompt, fix_prompt=False, size="1024x1024", response_format="b64_json", display_image=False, save_image=True, image_name=None, save_dir='media/images'):
         """
         Generates an image based on the provided prompt and parameters.
 
@@ -705,6 +706,8 @@ class Images:
             response_format (str): The format of the response. Defaults to "b64_json".
             display_image (bool): Whether to display the generated images. Defaults to False.
             save_image (bool): Whether to save the generated images. Defaults to True.
+            image_name (str, optional): The name of the image file. If none is provided, defaults to timestamp.png.
+            save_dir (str): The directory where the image will be saved. Defaults to 'media/images'.
 
         Returns:
             dict: A JSON object containing the following keys:
@@ -737,8 +740,9 @@ class Images:
             )
 
             if save_image:
-                image_name = f'{timestamp}.png'
-                image_path = os.path.join('images', image_name)
+                if not image_name:
+                    image_name = f'{timestamp}.png'
+                image_path = os.path.join(save_dir, image_name)
         
             if display_image:
                 if response_format == "b64_json":
@@ -795,9 +799,9 @@ class Audio:
         self.openai = openai
         log(logging, f"Initalized Audio class.", "green")
 
-    def speak(self, text, model="tts-1", voice="onyx", response_format="opus", speed=1.0):
+    def speak(self, text, model="tts-1", voice="onyx", response_format="opus", speed=1.0, save=False, file_name=None, save_dir='media/audio'):
         """
-        Generates audio from the input text and plays it in real-time.
+        Generates audio from the input text and plays it in real-time. Optionally saves the audio to a file.
 
         Args:
             text (str): The text to generate audio for. The maximum length is 4096 characters.
@@ -805,6 +809,22 @@ class Audio:
             voice (str): The voice to use when generating the audio. Supported voices are alloy, echo, fable, onyx, nova, and shimmer.
             response_format (str): The format to audio in. Supported formats are mp3, opus, aac, and flac. Defaults to 'opus'.
             speed (float): The speed of the generated audio. Select a value from 0.25 to 4.0. Defaults to 1.0.
+            save (bool): Whether to save the generated audio. Defaults to True.
+            file_name (str): The name of the audio file to save. If none is provided, defaults to timestamp.{response_format}.
+            save_dir (str): The directory where the audio will be saved. Defaults to 'media/audio'.
+
+        Returns:
+            speech_dict: Information about the generated speech with the following keys:
+                - 'text' (str): The original text provided for speech generation.
+                - 'speed' (float): The speed at which the audio was generated.
+                - 'voice' (str): The voice used to generate the audio.
+                - 'model' (str): The TTS model used for generating the audio.
+                - 'response_format' (str): The format of the generated audio file.
+                - 'file_path' (str, optional): The file path where the audio was saved, if saving was requested.
+                - 'start_time' (str): The ISO 8601 timestamp when the audio generation started.
+                - 'end_time' (str): The ISO 8601 timestamp when the audio generation ended.
+                - 'duration_ms' (float): The duration of the generated audio in milliseconds.
+                - 'words_per_minute' (float): The number of words spoken per minute in the generated audio.
         """
 
         log(logging, "Making Speech API call...", "purple")
@@ -821,10 +841,45 @@ class Audio:
             buffer.write(chunk)
         buffer.seek(0)
 
+        # Calculate the length of the audio in milliseconds
         with sf.SoundFile(buffer, 'r') as sound_file:
             data = sound_file.read(dtype='int16')
-            sd.play(data, sound_file.samplerate)
-            sd.wait()
+            duration_ms = len(data) / sound_file.samplerate * 1000
+            start_time = datetime.now()
+            end_time = start_time + timedelta(milliseconds=duration_ms)
+            words = len(text.split())
+            words_per_minute = words / (duration_ms / 60000.0)
+
+        # Save the audio file if requested
+        if save:
+            if not file_name:
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                file_name = f'{timestamp}.{response_format}'
+            
+            if not os.path.exists(save_dir):
+                os.makedirs(save_dir)
+
+            path_to_recording = os.path.join(save_dir, file_name)
+
+            with open(path_to_recording, 'wb') as f:
+                f.write(buffer.getvalue())
+
+        # Play the audio
+        sd.play(data, sound_file.samplerate)
+        sd.wait()
+
+        return {
+            "text": text,
+            "speed": speed,
+            "voice": voice,
+            "model": model,
+            "response_format": response_format,
+            "file_path": path_to_recording if save else None,
+            "start_time": start_time.isoformat(),
+            "end_time": end_time.isoformat(),
+            "duration_ms": duration_ms,
+            "words_per_minute": words_per_minute
+        }
     
     def transcribe(self, file_path, model="whisper-1", language=None, prompt=None, response_format="json", temperature=0):
         """
@@ -969,7 +1024,7 @@ class Audio:
         os.remove(file_path)
 
         return translation
-
+  
 class Files:
     def __init__(self):
         self.openai = openai
