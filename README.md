@@ -2,10 +2,35 @@
 
 ![A retro pixel art image of a robot on a launchpad trampoline, similar to the first design, but with a unique twist_ the robot has a visible neural net-2](https://github.com/samshapley/openai-launchpad/assets/93387313/df904c4a-d2b9-4d25-99c8-5282ad01f760)
 
+### What is OpenAI Launchpad?
 
-### Features
+`this is not affiliated with OpenAI in any way`
 
-**ai.py** is a single file that contains all the code you need to interact with the OpenAI API, in a pre-built, cookbook-esque format. It's designed to be easy to use, and easy to understand.
+OpenAI Launchpad is a Python library that makes it easy to use the OpenAI API. It's designed to be easy to use, and easy to understand.
+
+The different "abilities" OpenAI offer are all made readily available in a single file, **ai.py**, which you can import and use in your own projects. 
+
+Use this to quickly prototype ideas, or to create entire intelligent systems.
+
+This is a layer to enhance the OpenAI API. If you need to avoid open-source, everyone knows these LLMs are the good stuff.
+
+### Installation
+
+```python
+git clone git@github.com:samshapley/openai-launchpad.git
+
+cd openai-launchpad
+
+pip install -r requirements.txt
+```
+
+### Integrate with your own projects
+
+Use **ai.py** as an existing backend for hackathon systems or projects that make use of the OpenAI API.
+
+### What can it do?
+
+Each endpoint [in the API](https://platform.openai.com/docs/api-reference) has its own class, and every feature offered by that endpoint is built into that class already.
 
 - **Chat**: Engage in conversations with AI, with options to remember context, stream and speak responses, and apply logit biases to control the AI's output.
 - **Vision**: Process images using AI, including encoding images to base64, constructing image messages, and generating vision completions.
@@ -16,20 +41,11 @@
 
 **powers.py** is a file that contains all the things the AIs can do , i.e external tools.
 
-### Setup
+### Integration with Weights and Biases
 
-Get building in 4 steps. In a new virtual environment, 
+See the `examples/wandb/README.md` for full details. 
 
-```python
-git clone git@github.com:samshapley/openai-launchpad.git
-
-cd openai-launchpad
-
-pip install -r requirements.txt
-
-update your openai api key in ai.py
-```
-
+Launchpad can be easily combined with Wandb for easy tracking of new AI systems.
 
 ### Usage
 
@@ -46,7 +62,6 @@ from ai import Chat
 chat = Chat(model="gpt-3.5-turbo", system="Helpful assistant.")
 completion, messages = chat.chat_completion(prompt="Tell me a joke.")
 ```
-
 Everything the chat endpoint accepts is available in `chat_completion`.
 
 2. Vision Completion
