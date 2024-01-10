@@ -5,3 +5,4 @@ scipy
 sounddevice
 soundfile
 tiktoken
+python-Levenshtein

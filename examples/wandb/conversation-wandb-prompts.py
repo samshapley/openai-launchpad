@@ -1,9 +1,10 @@
-# set directory so i can import packages from one level up
+# Go to root path
+import sys
+sys.path.append("..")
+
 import time
 import sys
-import os
 import wandb
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from ai import Chat, Audio
 from wandb_logging import WandbSpanManager
@@ -25,6 +26,8 @@ chain_name = "conversation"
 agent_name = "agent"
 
 agent_span = wb.wandb_span(span_kind = "agent", span_name=agent_name, parent_span_id=None)
+
+speak = True
 
 while True:
 
@@ -57,19 +60,19 @@ while True:
         metadata={"model_name": model}
     )
 
-    voice = "echo"
-    audio.speak(completion["response"], voice=voice, speed=1.5)
+    if speak:
+        voice = "echo"
+        audio.speak(completion["response"], voice=voice, speed=1.5)
 
-    # Log the speech span.
-    speech_span = wb.wandb_span(
-        span_kind="tool",
-        span_name="speech",
-        parent_span_id = chain_span,
-        inputs={"text": completion["response"]},
-        outputs={"tool": "Completion spoken."},
-        metadata={"voice": voice}
-    )
-
+        # Log the speech span.
+        speech_span = wb.wandb_span(
+            span_kind="tool",
+            span_name="speech",
+            parent_span_id = chain_span,
+            inputs={"text": completion["response"]},
+            outputs={"tool": "Completion spoken."},
+            metadata={"voice": voice}
+        )
 
 wb.update_span_by_id(agent_span, inputs={"transcript": transcript}, outputs=completion)
 
