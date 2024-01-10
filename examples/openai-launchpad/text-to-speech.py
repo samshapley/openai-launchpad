@@ -4,7 +4,7 @@ audio = Audio()
 
 text = "The quick brown fox jumps over the lazy dog."
 
-speech = audio.speak(text=text, voice='shimmer', speed=1, save=True)
+speech = audio.speak(text=text, voice='shimmer', speed=1, save_audio=True)
 
 print(speech)
 

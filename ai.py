@@ -22,7 +22,7 @@ from datetime import timedelta
 import requests
 
 ## get openai api key from environment variable
-openai.api_key = "your key here"
+openai.api_key = "your api key"
 
 logging = True
 
@@ -887,7 +887,7 @@ class Audio:
             response_format=response_format,
             speed=speed
         )
-
+        
         buffer = io.BytesIO()
         for chunk in spoken_response.iter_bytes(chunk_size=4096):
             buffer.write(chunk)
