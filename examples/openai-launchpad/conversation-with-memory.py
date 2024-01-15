@@ -13,4 +13,4 @@ while True:
         break
 
     print(transcript)
-    chat.chat_completion(transcript, speak=True, stream=True, memories=False)
+    chat.chat_completion(transcript, speak=True, stream=True, memories=True)

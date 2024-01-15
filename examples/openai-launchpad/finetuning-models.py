@@ -14,11 +14,11 @@ fine_tuning_job = fine_tuner.finetune_model(
     model_name='gpt-3.5-turbo',
     suffix='example',
     n_epochs=10,  # for example
+
 )
 
 # Print the fine-tuning job details
 print(fine_tuning_job)
-
 
 ## Once it is complete, you can use the fine-tuned model like this:
 

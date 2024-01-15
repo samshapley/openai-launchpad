@@ -22,7 +22,7 @@ from datetime import timedelta
 import requests
 
 ## get openai api key from environment variable
-openai.api_key = "your api key"
+openai.api_key = "your key here"
 
 logging = True
 
@@ -209,6 +209,7 @@ class Chat:
 
         # Make the API call
         log(logging, "Making Chat Completion API call...", "purple")
+        
         completion = self.openai.chat.completions.create(**api_call_args)
 
         completion_content = ""
