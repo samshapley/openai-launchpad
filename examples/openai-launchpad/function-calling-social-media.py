@@ -49,17 +49,19 @@ completion = chat.chat_completion(
     tool_choice="auto",
     stream=False,
     return_messages=True,
+    return_tool_calls=True,
 )
+
+import tool_manager as tm
 
 # Get the messages from the completion object
 messages = completion["messages"]
 
-
-messages = powers.use_tools(messages, available_functions)
+## Use the last tools in the messages
+chat.use_tools(available_functions)
 
 # Get the final response from the model after the tool has been used
 completion = chat.chat_completion(
     prompt="reply as a sea shanty",
-    messages=messages,
     stream=True,
 )

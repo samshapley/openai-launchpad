@@ -19,13 +19,12 @@ def extract_tool_calls(messages):
         
     return tool_calls
 
-def use_tools(chat_instance, messages, available_functions):
+def use_tools(messages, available_functions):
 
     """
     Executes the functions specified in the tool_calls using the available functions provided and integrates the responses into the messages.
 
     Args:
-        chat_instance (Chat): An instance of the Chat class.
         messages (List[dict]): List of message objects from the chat completion.
         available_functions (dict): Dictionary of available functions to be used, with function names as keys and callable functions as values.
 
@@ -54,8 +53,6 @@ def use_tools(chat_instance, messages, available_functions):
                 print(f"Function {function_name} not found in available_functions.")
     else:
         pass
-
-    chat_instance.messages = messages
 
     return messages
 

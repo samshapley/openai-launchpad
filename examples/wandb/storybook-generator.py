@@ -71,7 +71,6 @@ columns = ["paragraph", "image_path"]
 storybook_table = wandb.Table(columns=columns)
 
 while True:
-
     # Prompt if its the first paragraph
     if len(storybook) == 0:
         prompt = input("What is the storybook about? ")
@@ -94,8 +93,7 @@ while True:
 
     tool_calls = tm.get_tool_functions(paragraph_completion["tool_calls"])
 
-
-    messages = powers.use_tools(chat, paragraph_completion["messages"], available_functions)
+    messages = chat.use_tools(available_functions)
 
     for next_section in tool_calls:
         if next_section["name"] == "generate_paragraph_with_image":

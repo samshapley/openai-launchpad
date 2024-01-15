@@ -1,9 +1,3 @@
-import tool_manager as tm
-
-def use_tools(chat_instance, messages, available_functions):
-    messages = tm.use_tools(chat_instance, messages, available_functions)
-    return messages
-
 def retrieval(embeddings, query, knowledge_base, top_n=1, similarity_threshold=0.0):
     """
     Retrieves the most relevant facts based on a query from a given knowledge base.
