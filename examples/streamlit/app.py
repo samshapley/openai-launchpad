@@ -25,6 +25,17 @@ if service == "Chat":
     # Input for user message
     user_input = st.text_input("Enter your message:")
 
+    # Send the message when the user hits Enter
+
+    # Cool new feature: Emoji Picker for Chat
+    emoji_picker = st.selectbox(
+        "Pick an emoji to send:",
+        ("😀", "😂", "😍", "😎", "😢", "👍", "👎", "🎉"),
+        format_func=lambda emoji: emoji + " " + emoji.encode("unicode-escape").decode("ASCII")
+    )
+    if st.button("Send Emoji"):
+        st.session_state['chat_history'].append("You: " + emoji_picker)
+
     if st.button("Send"):
         # Update the chat history with the user's message
         st.session_state['chat_history'].append("You: " + user_input)

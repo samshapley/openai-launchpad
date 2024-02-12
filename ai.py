@@ -20,9 +20,10 @@ import helpers as h
 from openai import BadRequestError
 from datetime import timedelta
 import requests
+import tool_manager as tm
 
 ## get openai api key from environment variable
-openai.api_key = "your api key"
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 logging = True
 
@@ -42,6 +43,15 @@ class Chat:
         self.model = model
         self.encoding = tiktoken.encoding_for_model(self.model)
         log(logging, f"Initalized Chat class with model {model}", "green")
+
+    def update_messages(self, messages: List[dict]) -> None:
+        """
+        Updates the messages list with a new list of messages.
+
+        Args:
+            messages (List[dict]): A list of message objects.
+        """
+        self.messages = messages
     
     @staticmethod
     def _augment_phrases(phrases: List[str], augment: bool) -> List[str]:
@@ -209,6 +219,7 @@ class Chat:
 
         # Make the API call
         log(logging, "Making Chat Completion API call...", "purple")
+        
         completion = self.openai.chat.completions.create(**api_call_args)
 
         completion_content = ""
@@ -279,7 +290,7 @@ class Chat:
             system_fingerprint = completion.system_fingerprint                  # This fingerprint represents the backend configuration that the model runs with. Useful in conjuction with seed to understand determinism.
             finish_reason = completion.choices[0].finish_reason                 # The reason the completion ended.
             completion_content = completion.choices[0].message.content or ""    # The content of the completion.
-            tool_calls = h.to_dict(completion.choices[0].message.tool_calls)    # Extract the completion tool calls to dict.
+            tool_calls = h.to_dict(completion.choices[0].message.tool_calls)  # Extract the completion tool calls to dict.
             if return_logprobs:
                 logprobs   = h.to_dict(completion.choices[0].logprobs.content)  # Extract the completion logprobs to dict
 
@@ -332,6 +343,11 @@ class Chat:
 
         return completion_dict
     
+    def use_tools(self, available_functions):
+        self.available_functions = available_functions
+        messages = tm.use_tools(self.messages, available_functions)
+        self.messages = messages
+        return self.messages
 class Vision:
     def __init__(self, model="gpt-4-vision-preview", system=""):
         """

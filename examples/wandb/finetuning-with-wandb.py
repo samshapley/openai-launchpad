@@ -1,8 +1,12 @@
 from ai import FineTuner
+from wandb.integration.openai.fine_tuning import WandbLogger
+
+# Initialize wandb
+wandb_logger = WandbLogger()
 
 # Create an instance of the FineTuner class
 fine_tuner = FineTuner()
- 
+
 # Define the path to your JSONL file
 jsonl_file_path = 'assets/finetune-data.jsonl'
 
@@ -14,13 +18,16 @@ fine_tuning_job = fine_tuner.finetune_model(
     model_name='gpt-3.5-turbo',
     suffix='example',
     n_epochs=10,  # for example
-
 )
+
+# Sync the fine-tuning job with wandb (or call once it is complete)
+wandb_logger.sync(fine_tune_job_id=fine_tuning_job.id)
 
 # Print the fine-tuning job details
 print(fine_tuning_job)
 
 ## Once it is complete, you can use the fine-tuned model like this:
+
 
 # finetuned_job = fine_tuner.retrieve_finetuning_job(fine_tuning_job.id)
 

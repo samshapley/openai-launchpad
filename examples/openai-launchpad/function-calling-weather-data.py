@@ -58,11 +58,10 @@ completion = chat.chat_completion(
 messages = completion["messages"]
 
 ## Use tools is a power that applies any tools on the last message, and returns the updated messages with the responses from the tools integrated.   
-messages = powers.use_tools(messages, available_functions)
+chat.use_tools(available_functions)
 
 # Get the final response from the model after the tool has been used
 final_completion = chat.chat_completion(
     prompt="",
-    messages=messages,
     stream=True,
 )
